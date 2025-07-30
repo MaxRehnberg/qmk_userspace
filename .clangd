@@ -15,6 +15,7 @@ CompileFlags:
     - -DSPLIT_KEYBOARD
     - -DENCODER_MAP_ENABLE
     - -DENCODER_ENABLE
+    - -DREPEAT_KEY_ENABLE
     - -DRGB_MATRIX_ENABLE
     - -DMOUSE_SHARED_EP=FALSE
     - -DSTM32L412xx
@@ -78,6 +79,13 @@ InlayHints:
 
 Hover:
   ShowAKA: true
+
+Completion:
+  AllScopes: true
+
+SemanticTokens:
+  DisabledKinds: []
+  DisabledModifiers: []
 
 Diagnostics:
   Suppress:

@@ -24,6 +24,7 @@
                 "SPLIT_KEYBOARD",
                 "ENCODER_MAP_ENABLE",
                 "ENCODER_ENABLE",
+                "REPEAT_KEY_ENABLE",
                 "RGB_MATRIX_ENABLE",
                 "MOUSE_SHARED_EP=FALSE",
                 "STM32L412xx",

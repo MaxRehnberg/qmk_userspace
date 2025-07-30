@@ -4,7 +4,9 @@
         "--clang-tidy",
         "--completion-style=detailed",
         "--function-arg-placeholders",
-        "--header-insertion=iwyu"
+        "--header-insertion=iwyu",
+        "--compile-commands-dir=${workspaceFolder}",
+        "--log=verbose"
     ],
     "clangd.path": "clangd",
     "files.associations": {
@@ -12,6 +14,8 @@
         "*.c": "c"
     },
     "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.autocomplete": "disabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true,
     "clang-format.executable": "clang-format"
 }
