@@ -1,0 +1,56 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "QMK Elora",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/Users/maxsoneback/qmk_firmware",
+                "/Users/maxsoneback/qmk_firmware/quantum",
+                "/Users/maxsoneback/qmk_firmware/quantum/**",
+                "/Users/maxsoneback/qmk_firmware/tmk_core",
+                "/Users/maxsoneback/qmk_firmware/tmk_core/**",
+                "/Users/maxsoneback/qmk_firmware/platforms/chibios",
+                "/Users/maxsoneback/qmk_firmware/keyboards/splitkb/halcyon/elora",
+                "/Users/maxsoneback/qmk_firmware/keyboards/splitkb/halcyon/elora/rev2",
+                "/Users/maxsoneback/qmk_userspace/users/halcyon_modules",
+                "/Users/maxsoneback/qmk_userspace/users/halcyon_modules/splitkb"
+            ],
+            "defines": [
+                "QMK_KEYBOARD=\"splitkb/halcyon/elora/rev2\"",
+                "QMK_KEYMAP=\"max_rehnberg\"",
+                "QMK_VERSION=\"0.29.11\"",
+                "PROTOCOL_CHIBIOS",
+                "SPLIT_KEYBOARD",
+                "ENCODER_MAP_ENABLE",
+                "ENCODER_ENABLE",
+                "RGB_MATRIX_ENABLE",
+                "MOUSE_SHARED_EP=FALSE",
+                "STM32L412xx",
+                "CORTEX_USE_FPU=FALSE",
+                "ARM_MATH_CM0PLUS",
+                "HAL_USE_I2C=TRUE",
+                "HAL_USE_SPI=TRUE",
+                "HAL_USE_SERIAL=TRUE",
+                "HAL_USE_PWM=TRUE",
+                "HAL_USE_PAL=TRUE",
+                "HAL_USE_GPT=TRUE",
+                "HAVE_EEPROM_DRIVER=TRUE",
+                "EEPROM_DRIVER=EEPROM_DRIVER_TRANSIENT",
+                "RGB_MATRIX_DRIVER=WS2812",
+                "WS2812_DRIVER=WS2812_DRIVER_VENDOR",
+                "DRIVER_COUNT=1",
+                "RGB_MATRIX_LED_COUNT=84",
+                "SPLIT_TRANSPORT=SPLIT_TRANSPORT_SERIAL",
+                "SERIAL_DRIVER=SD1",
+                "SOFT_SERIAL_PIN=GP1",
+                "MASTER_RIGHT"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": "${workspaceFolder}/compile_commands.json"
+        }
+    ]
+}

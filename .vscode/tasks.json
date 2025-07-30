@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "QMK: Compile Elora Left",
+            "type": "shell",
+            "command": "qmk",
+            "args": ["userspace-compile", "-e", "HLC_NONE=1", "-e", "TARGET=elora_left"],
+            "group": "build",
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "QMK: Compile Elora Right",
+            "type": "shell",
+            "command": "qmk",
+            "args": ["userspace-compile", "-e", "HLC_ENCODER=1", "-e", "TARGET=elora_right"],
+            "group": "build",
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "QMK: Compile Both Halves",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "QMK: Compile Elora Left",
+                "QMK: Compile Elora Right"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "QMK: Flash Elora Left",
+            "type": "shell",
+            "command": "qmk",
+            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_NONE=1", "-e", "TARGET=elora_left"],
+            "group": "build",
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "QMK: Flash Elora Right",
+            "type": "shell",
+            "command": "qmk",
+            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_ENCODER=1", "-e", "TARGET=elora_right"],
+            "group": "build",
+            "problemMatcher": "$gcc"
+        }
+    ]
+}

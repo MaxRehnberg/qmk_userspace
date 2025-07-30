@@ -1,4 +1,96 @@
 CompileFlags:
-  Add: [-Wno-unknown-attributes, -Wno-maybe-uninitialized, -Wno-unknown-warning-option]
-  Remove: [-W*, -mmcu=*, -mcpu=*, -mfpu=*, -mfloat-abi=*, -mno-unaligned-access, -mno-thumb-interwork, -mcall-prologues, -D__has_include*]
+  Add: 
+    - -Wno-unknown-attributes
+    - -Wno-maybe-uninitialized
+    - -Wno-unknown-warning-option
+    - -Wno-reserved-identifier
+    - -Wno-unused-but-set-variable
+    - -Wno-unused-parameter
+    - -std=gnu11
+    - -DQMK_KEYBOARD="splitkb/halcyon/elora/rev2"
+    - -DQMK_KEYMAP="max_rehnberg"
+    - -DQMK_VERSION="0.29.11"
+    - -DQMK_USERSPACE="/Users/maxsoneback/qmk_userspace"
+    - -DPROTOCOL_CHIBIOS
+    - -DSPLIT_KEYBOARD
+    - -DENCODER_MAP_ENABLE
+    - -DENCODER_ENABLE
+    - -DRGB_MATRIX_ENABLE
+    - -DMOUSE_SHARED_EP=FALSE
+    - -DSTM32L412xx
+    - -DCORTEX_USE_FPU=FALSE
+    - -DARM_MATH_CM0PLUS
+    - -DHAL_USE_I2C=TRUE
+    - -DHAL_USE_SPI=TRUE
+    - -DHAL_USE_SERIAL=TRUE
+    - -DHAL_USE_PWM=TRUE
+    - -DHAL_USE_PAL=TRUE
+    - -DHAL_USE_GPT=TRUE
+    - -DHAVE_EEPROM_DRIVER=TRUE
+    - -DEEPROM_DRIVER=EEPROM_DRIVER_TRANSIENT
+    - -DRGB_MATRIX_DRIVER=WS2812
+    - -DWS2812_DRIVER=WS2812_DRIVER_VENDOR
+    - -DDRIVER_COUNT=1
+    - -DRGB_MATRIX_LED_COUNT=84
+    - -DSPLIT_TRANSPORT=SPLIT_TRANSPORT_SERIAL
+    - -DSERIAL_DRIVER=SD1
+    - -DSOFT_SERIAL_PIN=GP1
+    - -DMASTER_RIGHT
+    - -DHLC_NONE=1
+    - -I.
+    - -I/Users/maxsoneback/qmk_firmware
+    - -I/Users/maxsoneback/qmk_firmware/quantum
+    - -I/Users/maxsoneback/qmk_firmware/quantum/keymap_extras
+    - -I/Users/maxsoneback/qmk_firmware/quantum/keyboard
+    - -I/Users/maxsoneback/qmk_firmware/quantum/keymap
+    - -I/Users/maxsoneback/qmk_firmware/tmk_core
+    - -I/Users/maxsoneback/qmk_firmware/tmk_core/common
+    - -I/Users/maxsoneback/qmk_firmware/tmk_core/protocol
+    - -I/Users/maxsoneback/qmk_firmware/tmk_core/protocol/chibios
+    - -I/Users/maxsoneback/qmk_firmware/platforms/chibios
+    - -I/Users/maxsoneback/qmk_firmware/drivers
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/include
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/TIMv1
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/GPIOv3
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/USARTv3
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/SPIv2
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/I2Cv3
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/USBv1
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/LLD/DMAv1
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/STM32/STM32L4xx
+    - -I/Users/maxsoneback/qmk_firmware/lib/chibios/os/hal/ports/common/ARMCMx
+    - -I/Users/maxsoneback/qmk_firmware/keyboards/splitkb/halcyon/elora
+    - -I/Users/maxsoneback/qmk_firmware/keyboards/splitkb/halcyon/elora/rev2
+    - -I/Users/maxsoneback/qmk_userspace
+    - -I/Users/maxsoneback/qmk_userspace/keyboards/splitkb/halcyon/elora/keymaps/max_rehnberg
+    - -I/Users/maxsoneback/qmk_userspace/users/halcyon_modules
+    - -I/Users/maxsoneback/qmk_userspace/users/halcyon_modules/splitkb
+  Remove: [-W*, -mmcu=*, -mcpu=*, -mfpu=*, -mfloat-abi=*, -mno-unaligned-access, -mno-thumb-interwork, -mcall-prologues, -D__has_include*, -mthumb, -fno-*, -fdata-sections, -ffunction-sections, -fshort-enums, -Os]
   Compiler: clang
+
+Index:
+  Background: Build
+
+InlayHints:
+  Enabled: true
+  ParameterNames: true
+  DeducedTypes: true
+
+Hover:
+  ShowAKA: true
+
+Diagnostics:
+  Suppress:
+    - reserved-identifier
+    - unused-includes
+    - include-what-you-use
+  ClangTidy:
+    Add:
+      - readability-*
+      - bugprone-*
+    Remove:
+      - bugprone-easily-swappable-parameters
+      - readability-magic-numbers
+      - readability-avoid-const-params-in-decls
+      - readability-identifier-naming
+      - readability-reserved-identifier
