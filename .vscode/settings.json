@@ -17,5 +17,6 @@
     "C_Cpp.autocomplete": "disabled",
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true,
-    "clang-format.executable": "clang-format"
+    "clang-format.executable": "clang-format",
+    "editor.inlayHints.enabled": "off"
 }
