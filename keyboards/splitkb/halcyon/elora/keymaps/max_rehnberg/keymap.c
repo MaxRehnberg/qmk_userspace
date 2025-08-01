@@ -1,13 +1,19 @@
 // Copyright 2024 splitkb.com (support@splitkb.com)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "action_layer.h"
+#include "color.h"
+#include "info_config.h"
 #include "keycodes.h"
 #include "keymap_swedish.h"
 #include "keymap_us.h"
 #include "modifiers.h"
 #include "quantum.h"
 #include "quantum_keycodes.h"
+#include "rgb_matrix.h"
 #include QMK_KEYBOARD_H
+
+bool caps_word_enabled = false;
 
 const uint16_t PROGMEM shift_bspc_del[] = {KC_RSFT, KC_BSPC, COMBO_END};
 combo_t key_combos[] = {
@@ -239,11 +245,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |        |      |      |      |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        |      |      |  ↑   |      |      |                              |      |      |      |      |      |        |
+ * |  Acl1  | Acl2 |      |  ↑   |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        | ←Whl |  ←   |  ↓   | →    | →Whl |                              |      |      |      |      |      |        |
+ * |  Acl0  | ←Whl |  ←   |  ↓   | →    | →Whl |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |      | Acl0 | Acl1 | Acl2 |      |Lock  |      |  |      |      |      |      |      |      |      | Shift/ |
+ * | Shift/ |      |      |      |      |      |Lock  |      |  |      |      |      |      |      |      |      | Shift/ |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |Double|Left  |Right |Middle|  |      |      |      |      |      |
@@ -255,9 +261,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
     [L_MS] = LAYOUT_elora_hlc(
       _______, _______, _______, _______, _______ , _______,                                          _______, _______, _______, _______, _______, _______,
-      _______, _______, _______, MS_UP  , _______ , _______,                                          _______, _______, _______, _______, _______, _______,
-      _______, MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT,  MS_WHLR,                                          _______, _______, _______, _______, _______, _______,
-      SFTLLCK, _______, MS_ACL0, MS_ACL1, MS_ACL2 , _______, QK_LOCK, _______,      _______, _______, _______, _______, _______, _______, _______, SFTLLCK,
+      MS_ACL1, MS_ACL2, _______, MS_UP  , _______ , _______,                                          _______, _______, _______, _______, _______, _______,
+      MS_ACL0, MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT,  MS_WHLR,                                          _______, _______, _______, _______, _______, _______,
+      SFTLLCK, _______, _______, _______, _______ , _______, QK_LOCK, _______,      _______, _______, _______, _______, _______, _______, _______, SFTLLCK,
                                  _______, MS_DBL  , MS_BTN1, MS_BTN2, MS_BTN3,      _______, _______, _______, _______, _______,
      _______, _______,  _______, _______, _______ ,                                                            _______, _______, _______, _______, _______
     ),
@@ -269,7 +275,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |        |      |      |      |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
  * |    `   |  1   |  2   |  3   |  4   |  5   |                              |   6  |  7   |  8   |  9   |  0   |   =    |
- * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
+ * |--------+------+------+------+------+------|                             |------+------+------+------+------+--------|
  * |    ~   |  !   |  @   |  #   |  $   |  %   |                              |   ^  |  &   |  *   |  (   |  )   |   +    |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
  * | Shift/ |   \  |  :   |  ;   |  -   |  [   |  {   |      |  |      |   }  |   ]  |  _   |  ,   |  .   |  /   |   ?    |
@@ -360,3 +366,69 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [6] = { ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______)  } // Adjust
 };
 #endif
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    // set base color on all keys
+    hsv_t hsv = {0, 0, 100};
+    rgb_t base_rgb = hsv_to_rgb(hsv);
+    rgb_matrix_set_color_all(base_rgb.r, base_rgb.g, base_rgb.b);
+
+    if (caps_word_enabled) {
+        hsv.h = 0; // Set hue to red
+        hsv.s = 255; // Max saturation
+        rgb_t caps_word_rgb = hsv_to_rgb(hsv);
+        RGB_MATRIX_INDICATOR_SET_COLOR(5, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Underglow LED
+        RGB_MATRIX_INDICATOR_SET_COLOR(11, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Key
+    }
+
+    // set color on layer
+    uint8_t layer = get_highest_layer(layer_state | default_layer_state);
+    switch (layer) {
+        case L_NAV: 
+            hsv.h = 4; // orange
+            hsv.s = 255; // Max saturation
+            hsv.v = 175;
+            rgb_t nav_layer_rgb = hsv_to_rgb(hsv);
+            uint8_t list_arrow_key_indices[5] = {27, 22, 21, 20, 8};
+            for (uint8_t i = 0; i < 5; i++) {
+                rgb_matrix_set_color(list_arrow_key_indices[i], nav_layer_rgb.r, nav_layer_rgb.g, nav_layer_rgb.b);
+            }
+            break;
+        case L_ADJUST:
+            hsv.h = 0;
+            hsv.s = 255; // Max saturation
+            hsv.v = 100;
+            rgb_t adjust_layer_rgb = hsv_to_rgb(hsv);
+            rgb_matrix_set_color(10, adjust_layer_rgb.r, adjust_layer_rgb.g, adjust_layer_rgb.b);
+        default:
+            // Do nothing for other layers
+            break;
+    }
+ 
+    return false;
+}
+
+void caps_word_set_user(bool active) {
+    if (active) {
+        caps_word_enabled = true;
+    } else {
+        caps_word_enabled = false;
+    }
+}
+
+bool shutdown_user(bool jump_to_bootloader) {
+    
+    if (jump_to_bootloader) {
+        // red for bootloader
+        hsv_t hsv = {0, 255, 100};
+        rgb_t base_rgb = hsv_to_rgb(hsv);
+        rgb_matrix_set_color_all(base_rgb.r, base_rgb.g, base_rgb.b);
+    } else {
+        // off for soft reset
+        rgb_matrix_set_color_all(RGB_OFF);
+    }
+    // force flushing -- otherwise will never happen
+    rgb_matrix_update_pwm_buffers();
+    // false to not process kb level
+    return false;
+}

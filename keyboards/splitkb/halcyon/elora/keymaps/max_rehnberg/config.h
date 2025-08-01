@@ -1,4 +1,7 @@
 #define MK_3_SPEED 1
+#define MK_C_OFFSET_0 4
+#define MK_C_OFFSET_1 16
+#define MK_C_OFFSET_2 32
 
 #define RGBLIGHT_HUE_STEP 8
 #define RGBLIGHT_SAT_STEP 8
@@ -8,3 +11,5 @@
 #define RGBLIGHT_LIMIT_VAL 150
 #endif
 
+#define SPLIT_LAYER_STATE_ENABLE
+#define RGB_TRIGGER_ON_KEYDOWN
