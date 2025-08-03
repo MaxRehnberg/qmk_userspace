@@ -1,6 +1,8 @@
 // Copyright 2024 splitkb.com (support@splitkb.com)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <math.h>
+#include <stdint.h>
 #include "action_layer.h"
 #include "color.h"
 #include "info_config.h"
@@ -11,6 +13,7 @@
 #include "quantum.h"
 #include "quantum_keycodes.h"
 #include "rgb_matrix.h"
+#include "rgb_config.h"
 #include QMK_KEYBOARD_H
 
 bool caps_word_enabled = false;
@@ -92,12 +95,18 @@ enum layers {
 #define SKP_WDL LALT(KC_LEFT) // Skip word left
 #define SKP_WDR LALT(KC_RIGHT) // Skip word right
 
-
+#define BKSLSH LSA(KC_7)
 // Macros
 enum custom_keycodes {
     MS_DBL = SAFE_RANGE,
 };
 #define SFTLLCK LSFT_T(KC_0) // Locks layer on tap, shift on hold. KC_0 is arbitrary placeholder
+
+void double_tap(uint16_t keycode) {
+    tap_code(keycode);
+    wait_ms(50);
+    tap_code(keycode);
+}
 
 // Process record user function for custom keycodes
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -113,9 +122,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             break;
         case MS_DBL:
             if (record->event.pressed) {
-                tap_code(MS_BTN1);
-                wait_ms(50);
-                tap_code(MS_BTN1);
+                double_tap(MS_BTN1);
             }
             return false;
         default:
@@ -168,8 +175,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * | LShift |   X/ |   Q/ |   M/ |   W/ |   Z  | [ {  |CapsWd|  | ESC  |  ] } |   K  |   F/ |   ,/ |   ./ |   -/ | RShift |
  * |        | LCTL | LALT | LSHFT|  LGUI|      |      |      |  |      |      |      | RGUI | RSFT | RALT | LCTL |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
- *                        |Adjust|  MEH |Space/| BSPC |   *  |  |   *  | Tab  | Enter| MEH  | Menu |
- *                        |      |      |Nav   |      |      |  |      |      |      |      |      |
+ *                        |Adjust|  MEH |Space/| BSPC |   *  |  |   *  | Tab/ |Enter/| MEH  | Menu |
+ *                        |      |      |Nav   |      |      |  |      | SYM  |Mouse |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
  * | MUTE | ____ | _____ | ____ | ____ |                                              | MUTE | ____ | _____ | ____ | ____ |
@@ -216,11 +223,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |   F1   |  F2  |  F3  |  F4  |  F5  |  F6  |                              |  F7  |  F8  |  F9  |  F10 |  F11 |   F12  |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |  Cut   |Paste | Home |  ↑   | End  |      |                              |   +  |  7   |  8   |   9  |   *  |   :    |
+ * |        | Paste| Home |  ↑   | End  | Redo |                              |   +  |  7   |  8   |   9  |   *  |   :    |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |  Copy  |  ⇤   |  ←   |  ↓   | →    |  ⇥   |                              |   =  |  4   |  5   |  6   |   /  |   <    |
+ * |        | Copy |  ←   |  ↓   | →    | Undo |                              |   =  |  4   |  5   |  6   |   /  |   <    |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |      | PgUp |      | PgDn |      |      |      |  |      |      |   -  |  1/  |  2/  |  3/  |  %/  |   >    |
+ * | Shift/ | Cut  | PgUp |      | PgDn |      |      |      |  |      |      |   -  |  1/  |  2/  |  3/  |  %/  |   >    |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      | RGUI | RSFT | RALT | LCTL |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |      |      |      |      |  |      |      |   0  |  (   |  )   |
@@ -232,9 +239,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
     [L_NAV] = LAYOUT_elora_hlc(
       KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5   , KC_F6  ,                                          KC_F7  , KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
-      CUT    , PASTE  , KC_HOME, KC_UP  , KC_END  , _______,                                          KC_PPLS, KC_7   , KC_8   , KC_9   , KC_PAST, SE_COLN,
-      COPY   , SKP_WDL, KC_LEFT, KC_DOWN, KC_RIGHT, SKP_WDR,                                          KC_PEQL, KC_4   , KC_5   , KC_6   , KC_PSLS, SE_LABK,
-      SFTLLCK, _______, KC_PGUP, _______, KC_PGDN , _______, _______, _______,      _______, _______, KC_MINS, NV_RGUI, NV_RSFT, NV_RALT, NV_RCTL, SE_RABK,
+      _______, PASTE  , KC_HOME, KC_UP  , KC_END  , REDO   ,                                          KC_PPLS, KC_7   , KC_8   , KC_9   , KC_PAST, SE_COLN,
+      _______, COPY   , KC_LEFT, KC_DOWN, KC_RIGHT, UNDO   ,                                          KC_PEQL, KC_4   , KC_5   , KC_6   , KC_PSLS, SE_LABK,
+      SFTLLCK, CUT    , KC_PGUP, _______, KC_PGDN , _______, _______, _______,      _______, _______, KC_MINS, NV_RGUI, NV_RSFT, NV_RALT, NV_RCTL, SE_RABK,
                                  _______, _______ , _______, _______, _______,      _______, _______, KC_0   , SE_LPRN, SE_RPRN,
      _______, _______       ,  _______, _______, _______ ,                                                            _______, _______, _______, _______, _______
     ),
@@ -249,11 +256,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
  * |  Acl0  | ←Whl |  ←   |  ↓   | →    | →Whl |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |      |      |      |      |      |Lock  |      |  |      |      |      |      |      |      |      | Shift/ |
+ * | Shift/ |      |      |      |      |      |Lock  |      |  |      |      |      | Acl0 | Acl1 | Acl2 |      | Shift/ |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |Double|Left  |Right |Middle|  |      |      |      |      |      |
- *                        |      |click |click |click |click |  |      |      |      |      |      |
+ *                        |      |click |click |
+  |click |  |      |      |      |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
  * |      |      |       |      |      |                                              |      |      |       |      |      |
@@ -263,7 +271,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       _______, _______, _______, _______, _______ , _______,                                          _______, _______, _______, _______, _______, _______,
       MS_ACL1, MS_ACL2, _______, MS_UP  , _______ , _______,                                          _______, _______, _______, _______, _______, _______,
       MS_ACL0, MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT,  MS_WHLR,                                          _______, _______, _______, _______, _______, _______,
-      SFTLLCK, _______, _______, _______, _______ , _______, QK_LOCK, _______,      _______, _______, _______, _______, _______, _______, _______, SFTLLCK,
+      SFTLLCK, _______, _______, _______, _______ , _______, QK_LOCK, _______,      _______, _______, _______, MS_ACL0, MS_ACL1, MS_ACL2, _______, SFTLLCK,
                                  _______, MS_DBL  , MS_BTN1, MS_BTN2, MS_BTN3,      _______, _______, _______, _______, _______,
      _______, _______,  _______, _______, _______ ,                                                            _______, _______, _______, _______, _______
     ),
@@ -274,12 +282,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |        |      |      |      |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |    `   |  1   |  2   |  3   |  4   |  5   |                              |   6  |  7   |  8   |  9   |  0   |   =    |
- * |--------+------+------+------+------+------|                             |------+------+------+------+------+--------|
- * |    ~   |  !   |  @   |  #   |  $   |  %   |                              |   ^  |  &   |  *   |  (   |  )   |   +    |
+ * |        |  '   |  <   |  >   |  "   |  _   |                              |   ?  |  [   |  ]   |      |  %   |   ^    |
+ * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
+ * |        |  !   |  *   |  /   |  =   |  |   |                              |   #  |  (   |  )   |   :  |  ~   |   &    |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |   \  |  :   |  ;   |  -   |  [   |  {   |      |  |      |   }  |   ]  |  _   |  ,   |  .   |  /   |   ?    |
- * | lock   |      |      |      |      |      |      |      |  |      |      |      |      | RGUI | RSFT | RALT | LCTL   |
+ * | Shift/ |   \  |  +   |      |  -   |   {  |  }   |      |  |      |      |   @  |  ;   |  ,   |  .   |      | Shift/ |
+ * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |      |      |      |      |  |      |      |      |      |      |
  *                        |      |      |      |      |      |  |      |      |      |      |      |
@@ -289,14 +297,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------'                                              `-----------------------------------'
  */
     [L_SYM] = LAYOUT_elora_hlc(
-      _______, _______, _______, _______, _______, _______,                                     _______, _______, _______, _______, _______, _______,
-      KC_GRV ,   KC_1 ,   KC_2 ,   KC_3 ,   KC_4 ,   KC_5 ,                                       KC_6 ,   KC_7 ,   KC_8 ,   KC_9 ,   KC_0 , KC_EQL ,
-     KC_TILD , KC_EXLM,  KC_AT , KC_HASH,  KC_DLR, KC_PERC,                                     KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_PLUS,
-     KC_PIPE , KC_BSLS, KC_COLN, KC_SCLN, KC_MINS, KC_LBRC, KC_LCBR, _______, _______, KC_RCBR, KC_RBRC, KC_UNDS, KC_COMM,  KC_DOT, KC_SLSH, KC_QUES,
-                                 _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-     _______, _______,  _______, _______, _______,                                                       _______, _______, _______, _______, _______
+      _______, _______, _______, _______, _______, _______,                                             _______, _______, _______, _______, _______, _______,
+      KC_NO  , SE_QUOT, KC_GRV,S(KC_GRV), SE_DQUO, SE_UNDS,                                             SE_QUES, SE_LBRC, SE_RBRC, SE_RABK, SE_PERC, SE_CIRC,
+      KC_NO  , SE_EXLM, SE_ASTR, SE_SLSH, SE_EQL , A(KC_7),                                             SE_HASH, SE_LPRN, SE_RPRN, SE_COLN, SE_TILD, SE_AMPR,
+      SFTLLCK, KC_NO  , SE_PLUS, BKSLSH , SE_MINS, LSA(KC_8), LSA(KC_9), _______,     _______, _______, SE_AT  , SE_SCLN, KC_COMM, KC_DOT,  KC_NO  , SFTLLCK,
+                                     _______, _______, _______, _______, _______,     _______, _______, _______, _______, _______,
+     _______, _______,  _______, _______, _______,                                                               _______, _______, _______, _______, _______
     ),
-
 /*
  * Adjust Layer: Default layer settings, RGB
  *
@@ -367,39 +374,31 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+// RGB Profiles - Functions moved to rgb_config.c
+
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // set base color on all keys
-    hsv_t hsv = {0, 0, 100};
-    rgb_t base_rgb = hsv_to_rgb(hsv);
-    rgb_matrix_set_color_all(base_rgb.r, base_rgb.g, base_rgb.b);
+    set_layer_rgb_by_configs(&base_layer_config);
 
     if (caps_word_enabled) {
-        hsv.h = 0; // Set hue to red
-        hsv.s = 255; // Max saturation
-        rgb_t caps_word_rgb = hsv_to_rgb(hsv);
-        RGB_MATRIX_INDICATOR_SET_COLOR(5, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Underglow LED
-        RGB_MATRIX_INDICATOR_SET_COLOR(11, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Key
+        set_layer_rgb_by_configs(&caps_word_layer_config);
     }
 
     // set color on layer
     uint8_t layer = get_highest_layer(layer_state | default_layer_state);
     switch (layer) {
         case L_NAV: 
-            hsv.h = 4; // orange
-            hsv.s = 255; // Max saturation
-            hsv.v = 175;
-            rgb_t nav_layer_rgb = hsv_to_rgb(hsv);
-            uint8_t list_arrow_key_indices[5] = {27, 22, 21, 20, 8};
-            for (uint8_t i = 0; i < 5; i++) {
-                rgb_matrix_set_color(list_arrow_key_indices[i], nav_layer_rgb.r, nav_layer_rgb.g, nav_layer_rgb.b);
-            }
+            set_layer_rgb_by_configs(&nav_layer_config);
+            break;
+        case L_MS:
+            set_layer_rgb_by_configs(&mouse_layer_config);
+            break;
+        case L_SYM:
+            set_layer_rgb_by_configs(&symbol_layer_config);
             break;
         case L_ADJUST:
-            hsv.h = 0;
-            hsv.s = 255; // Max saturation
-            hsv.v = 100;
-            rgb_t adjust_layer_rgb = hsv_to_rgb(hsv);
-            rgb_matrix_set_color(10, adjust_layer_rgb.r, adjust_layer_rgb.g, adjust_layer_rgb.b);
+            set_layer_rgb_by_configs(&adjust_layer_config);
+            break;
         default:
             // Do nothing for other layers
             break;
@@ -420,9 +419,7 @@ bool shutdown_user(bool jump_to_bootloader) {
     
     if (jump_to_bootloader) {
         // red for bootloader
-        hsv_t hsv = {0, 255, 100};
-        rgb_t base_rgb = hsv_to_rgb(hsv);
-        rgb_matrix_set_color_all(base_rgb.r, base_rgb.g, base_rgb.b);
+        set_layer_rgb_by_configs(&bootloader_config);
     } else {
         // off for soft reset
         rgb_matrix_set_color_all(RGB_OFF);
