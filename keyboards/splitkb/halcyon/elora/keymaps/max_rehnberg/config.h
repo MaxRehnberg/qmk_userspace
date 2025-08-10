@@ -1,3 +1,5 @@
+#define SELECT_WORD_OS_MAC
+
 #define MK_3_SPEED 1
 #define MK_C_OFFSET_0 4
 #define MK_C_OFFSET_1 16
@@ -13,3 +15,10 @@
 
 #define SPLIT_LAYER_STATE_ENABLE
 #define RGB_TRIGGER_ON_KEYDOWN
+
+// Home row definitions
+#define DUMMY_MOD_NEUTRALIZER_KEYCODE KC_F18
+#define TAPPING_TERM 250
+#define CHORDAL_HOLD
+#define PERMISSIVE_HOLD
+#define FLOW_TAP_TERM 150

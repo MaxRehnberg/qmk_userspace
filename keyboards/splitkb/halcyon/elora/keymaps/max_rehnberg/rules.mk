@@ -6,6 +6,8 @@ LAYER_LOCK_ENABLE = yes
 MOUSE_KEY_ENABLE = yes
 RGB_MATRIX_ENABLE = yes
 RGB_MATRIX_DRIVER = ws2812
+SPLIT_KEYBOARD = yes
+
 
 # Add custom RGB configuration
 SRC += rgb_config.c

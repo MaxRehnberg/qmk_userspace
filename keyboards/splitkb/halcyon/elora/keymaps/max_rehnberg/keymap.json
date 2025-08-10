@@ -1,0 +1,6 @@
+{
+    "modules": [
+        "getreuer/speculative_hold",
+        "getreuer/select_word"
+    ]
+}

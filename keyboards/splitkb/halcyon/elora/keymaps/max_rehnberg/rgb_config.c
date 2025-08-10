@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "rgb_config.h"
+#define RGB_MATRIX_SPLIT { 37, 37 }
+#define SPLIT_LAYER_STATE_ENABLE
 
 // Shared LED Groups
+
 static const uint8_t arrow_keys[] = {LED_ARROW_UP, LED_ARROW_DOWN, LED_ARROW_LEFT, LED_ARROW_RIGHT};
 
 // Common key groups that could be reused across layers
