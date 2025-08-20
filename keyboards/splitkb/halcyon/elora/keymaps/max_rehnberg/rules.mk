@@ -12,5 +12,8 @@ SPLIT_KEYBOARD = yes
 # Add custom RGB configuration
 SRC += rgb_config.c
 
+# Add app switcher functionality
+SRC += app_switcher.c
+
 # This adds module functionality to your keyboard (files found in users/halcyon_modules)
 USER_NAME := halcyon_modules
