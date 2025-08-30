@@ -294,8 +294,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |Double|Left  |Right |Middle|  |      |      |      |      |      |
- *                        |      |click |click |
-  |click |  |      |      |      |      |      |
+ *                        |      |click |click |click |click |  |      |      |      |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
  * |      |      |       |      |      |                                              |      |      |       |      |      |
@@ -303,9 +302,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
     [L_MS] = LAYOUT_elora_hlc(
       KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   ,                                          _______, _______, _______, _______, _______, _______,
-      KC_NO  , KC_NO  , MS_WHLU, MS_UP  , MS_WHLD, KC_NO   ,                                          _______, _______, _______, _______, _______, _______,
+      KC_NO  , KC_NO  , MS_WHLU, MS_UP  , MS_WHLD, KC_NO   ,                                          _______, KC_NO  , KC_NO  , KC_NO  , _______, _______,
       KC_NO  , MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT,  MS_WHLR,                                          _______, MS_ACL0, MS_ACL1, MS_ACL2, _______, _______,
-      SFTLLCK, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   , QK_LOCK, _______,      _______, _______, _______, _______, _______, _______, _______, SFTLLCK,
+      SFTLLCK, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   , QK_LOCK, _______,      _______, _______, _______, KC_NO  , KC_NO  , KC_NO  , _______, SFTLLCK,
                                  _______, MS_DBL , MS_BTN1 , MS_BTN2, MS_BTN3,      _______, _______, _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                            _______, _______, _______, _______, _______
     ),
@@ -316,11 +315,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |        |      |      |      |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        |  <   |  >   |  '   |  "   |  -   |                              |   ?  |  [   |  ]   |  %   |  &   |   !    |
+ * |        |  <   |  >   |  '   |  "   |  -   |                              |   ?  |  [   |  ]   |  &   |  %   |   ;    |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
  * |        |      |  *   |  /   |  =   |  |   |                              |   ;  |  (   |  )   |   :  |  ~   |   ^    |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |   \  |  +   |  \   |  _   |  $   |  {   |  }   |  |      |      |   @  |  #   |  ,   |  .   |  -   | Shift/ |
+ * | Shift/ |   \  |  +   |  \   |  _   |  @   |  $   |      |  |      |      |   #  |  {   |  }   |  .   |  -   | Shift/ |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |      |      |      |      |  |      |      |      |      |      |
@@ -331,11 +330,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------'                                              `-----------------------------------'
  */
     [L_SYM] = LAYOUT_elora_hlc(
-      _______, _______, _______, _______, _______, _______,                                             _______, _______, _______, _______, _______, _______,
-      KC_NO  , KC_GRV,S(KC_GRV), SE_QUOT, SE_DQUO, SE_MINS,                                             SE_QUES, SE_LBRC, SE_RBRC, SE_PERC, SE_AMPR, KC_NO,
-      KC_NO  , KC_NO , SE_ASTR, SE_SLSH,  SE_EQL , A(KC_7),                                             SE_SCLN, SE_LPRN, SE_RPRN, SE_COLN, SE_TILD, SE_CIRC,
-      SFTLLCK, KC_NO  , SE_PLUS, BKSLSH , SE_UNDS, SE_DLR , LSA(KC_8), LSA(KC_9),      _______, _______, SE_AT  , SE_HASH, KC_COMM, KC_DOT,  _______, SFTLLCK,
-                                     _______, _______, _______, _______, _______,     _______, _______, _______, _______, _______,
+      _______, _______, _______, _______, _______, _______,                                         _______, _______ , _______  , _______, _______, _______,
+      KC_NO  , KC_GRV,S(KC_GRV),SE_QUOT, SE_DQUO, SE_MINS,                                         SE_QUES, SE_LBRC  ,SE_RBRC   , SE_AMPR, SE_PERC, SE_SCLN,
+      KC_NO  , KC_NO , SE_ASTR, SE_SLSH, SE_EQL , A(KC_7),                                         SE_SCLN, SE_LPRN  ,SE_RPRN   , SE_COLN, SE_TILD, SE_CIRC,
+      SFTLLCK, KC_NO , SE_PLUS, BKSLSH , SE_UNDS, SE_AT  , SE_DLR , KC_NO  ,     _______, _______,  SE_HASH, LSA(KC_8),LSA(KC_9), KC_DOT,  _______, SFTLLCK,
+                                _______, _______, _______, _______, _______,     _______, _______,  _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                               _______, _______, _______, _______, _______
     ),
 /*
@@ -350,8 +349,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
  * |        |      |      |Gaming|      |      |      |      |  |      |      |      | SAD  | HUD  | VAD  | RMOD |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
- *                        |      |      |      |      |      |  |      |      |      |      |      |
- *                        |      |      |      |      |      |  |      |      |      |      |      |
+ *                        |      |      |      |      |      |  |      |      |CG_   |      |      |
+ *                        |      |      |      |      |      |  |      |      |TOGG  |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
  * |      |      |       |      |      |                                              |      |      |       |      |      |
@@ -362,7 +361,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       _______, _______, _______, QWERTY , _______, _______,                                    _______, _______, _______, _______, _______, _______,
       RM_NEXT, _______, _______, GALLIUM, _______, _______,                                    RM_TOGG, RM_SATU, RM_HUEU, RM_VALU, RM_NEXT, _______,
       RM_PREV, _______, _______, GAMING , _______, _______,_______, _______, _______, _______, _______, RM_SATD, RM_HUED, RM_VALD, RM_PREV, _______,
-                                 _______, _______, _______,_______, _______, _______, _______, _______, _______, _______,
+                                 _______, _______, _______,_______, _______, _______, _______, CG_TOGG, _______, _______,
      _______, _______,  _______, _______, _______,                                                      _______, _______, _______, _______, _______
     ),
 
@@ -485,6 +484,10 @@ bool caps_word_press_user(uint16_t keycode) {
         case KC_BSPC:
         case KC_DEL:
         case KC_UNDS:
+        case KC_UP:
+        case KC_DOWN:
+        case KC_LEFT:
+        case KC_RIGHT:
             return true;
 
         default:
@@ -498,10 +501,16 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
     switch (tap_hold_keycode) {  
         case SPC_NAV: 
             if (other_keycode == KC_D || other_keycode == GH_LSFT ||
-                other_keycode == GH_LALT || other_keycode == GH_LGUI) {
+                other_keycode == GH_LALT || other_keycode == GH_LGUI ||
+                other_keycode == KC_B || other_keycode == KC_N || other_keycode == KC_X) {
                 return true;
             }
             break;
+        case HYPR_ESC:
+            if (other_keycode == KC_UP || other_keycode == KC_DOWN ||
+                other_keycode == KC_LEFT || other_keycode == KC_RIGHT) {
+                return true;
+            }
     }
     // Otherwise defer to the opposite hands rule.
     return get_chordal_hold_default(tap_hold_record, other_record);

@@ -26,3 +26,5 @@
 #define APP_SWITCHER_TIMEOUT 1000 // 1 second
 
 #define QUICK_TAP_TERM 0
+
+#define CAPS_WORD_IDLE_TIMEOUT 8000
