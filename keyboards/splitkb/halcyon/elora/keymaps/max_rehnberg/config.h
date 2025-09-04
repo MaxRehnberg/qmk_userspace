@@ -6,10 +6,6 @@
 #define MK_C_OFFSET_1 16
 #define MK_C_OFFSET_2 32
 
-#ifndef RGBLIGHT_LIMIT_VAL
-#define RGBLIGHT_LIMIT_VAL 150
-#endif
-
 #define SPLIT_LAYER_STATE_ENABLE
 #define RGB_TRIGGER_ON_KEYDOWN
 
@@ -20,7 +16,7 @@
 #define PERMISSIVE_HOLD 
 #define FLOW_TAP_TERM 150
 
-#define DEBOUNCE 15
+#define DEBOUNCE 20
 
 // Timing constants
 #define APP_SWITCHER_TIMEOUT 1000 // 1 second

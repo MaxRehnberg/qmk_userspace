@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "rgb_config.h"
-#define RGB_MATRIX_SPLIT { 37, 37 }
-#define SPLIT_LAYER_STATE_ENABLE
 
 // Shared LED Groups
 

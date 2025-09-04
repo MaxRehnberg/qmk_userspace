@@ -7,6 +7,13 @@
 #include "rgb_matrix.h"
 #include "color.h"
 
+#define SPLIT_TRANSPORT_MIRROR
+#define SPLIT_LAYER_STATE_ENABLE
+#define SPLIT_MODS_ENABLE
+#ifndef RGBLIGHT_LIMIT_VAL
+#define RGBLIGHT_LIMIT_VAL 150
+#endif
+
 // LED Index Definitions
 #define LED_ARROW_UP    27
 #define LED_ARROW_DOWN  21  
