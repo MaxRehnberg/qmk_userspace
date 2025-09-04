@@ -3,31 +3,55 @@
 
 #include "rgb_config.h"
 
+// Function to check if current side is master (left side)
+bool is_current_side_master(void) {
+    return is_keyboard_master();
+}
+
+// Helper function to check if a config should be applied to current side
+static bool should_apply_config(rgb_side_t config_side) {
+    bool is_master = is_current_side_master();
+    
+    switch (config_side) {
+        case RGB_SIDE_BOTH:
+            return true;
+        case RGB_SIDE_LEFT:
+            return is_master;
+        case RGB_SIDE_RIGHT:
+            return !is_master;
+        default:
+            return true;
+    }
+}
+
 // Shared LED Groups
 
 static const uint8_t arrow_keys[] = {LED_ARROW_UP, LED_ARROW_DOWN, LED_ARROW_LEFT, LED_ARROW_RIGHT};
+static const uint8_t num_pad[] = {8, 14, 15, 16, 20, 21, 22, 26, 27, 28};
 
 // Common key groups that could be reused across layers
 //static const uint8_t number_row[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}; // 1-0 and Esc keys (if needed)
 
 
 // Layer Configurations
-static const uint8_t mouse_accel_keys[] = {24, 29, 30};
+static const uint8_t mouse_accel_keys[] = {20, 21, 22};
+
 const layer_rgb_config_t mouse_layer_config = {
     (const led_rgb_config_t[]){
-        RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4),      // Yellow arrow keys
-        RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3), // Green acceleration keys
-        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_1) // Yellow layer indicator
+        RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),      // Yellow arrow keys
+        RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3, RGB_SIDE_RIGHT), // Green acceleration keys
+        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_3, RGB_SIDE_RIGHT) // Yellow layer indicator
     },
-    2 // number of configs
+    3 // number of configs
 };
 
 const layer_rgb_config_t nav_layer_config = {
     (const led_rgb_config_t[]){
-        RGB_CONFIG_ARRAY(4, 255, 175, arrow_keys, 4),       // Orange arrow keys
-        RGB_CONFIG_SINGLE(4, 255, 175, LED_LAYER_NAV)    // Orange layer key (single LED)
+        RGB_CONFIG_ARRAY(4, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),       // Orange arrow keys
+        RGB_CONFIG_SINGLE(4, 255, 175, LED_LAYER_NAV, RGB_SIDE_LEFT),    // Orange layer key (single LED)
+        RGB_CONFIG_ARRAY(200, 255, 150, num_pad, 9, RGB_SIDE_RIGHT)
     },
-    2
+    3  
 };
 
 const layer_rgb_config_t symbol_layer_config = {
@@ -41,16 +65,16 @@ const layer_rgb_config_t symbol_layer_config = {
 static const uint8_t base_layer_keys[] = {15 , 21, 27};
 const layer_rgb_config_t adjust_layer_config = {
     (const led_rgb_config_t[]){
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_ADJUST),       // Red adjust key
-        RGB_CONFIG_ARRAY(85, 255, 175, base_layer_keys, 3)    // Green base layers
+        RGB_CONFIG_SINGLE(0, 255, 100, LED_ADJUST, RGB_SIDE_LEFT),       // Red adjust key
+        RGB_CONFIG_ARRAY(85, 255, 175, base_layer_keys, 3, RGB_SIDE_LEFT)    // Green base layers
     },
     2
 };
 
 const layer_rgb_config_t caps_word_layer_config = {
     (const led_rgb_config_t[]){
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_CAPS_WORD),   // Red caps word key
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_CW_UNDERGLOW) // Red underglow LED
+        RGB_CONFIG_SINGLE(0, 255, 100, LED_CAPS_WORD, RGB_SIDE_LEFT),   // Red caps word key
+        RGB_CONFIG_SINGLE(0, 255, 100, LED_CW_UNDERGLOW, RGB_SIDE_LEFT) // Red underglow LED
     },
     2
 };
@@ -82,6 +106,15 @@ void set_hsv_by_key_indices(const uint8_t *indices, uint8_t array_size, hsv_t hs
 void set_layer_rgb_by_configs(const layer_rgb_config_t* config) {
     for (uint8_t i = 0; i < config->config_count; i++) {
         const led_rgb_config_t* current_config = &config->configs[i];
+        
+        // For RGB_TYPE_ARRAY and RGB_TYPE_SINGLE, check the side field. For RGB_TYPE_ALL, assume RGB_SIDE_BOTH
+        rgb_side_t config_side = (current_config->type == RGB_TYPE_ALL) ? RGB_SIDE_BOTH : current_config->side;
+        
+        // Check if this config should be applied to the current side
+        if (!should_apply_config(config_side)) {
+            continue;
+        }
+        
         hsv_t hsv = {current_config->hue, current_config->saturation, current_config->value};
         rgb_t color = hsv_to_rgb(hsv);
         

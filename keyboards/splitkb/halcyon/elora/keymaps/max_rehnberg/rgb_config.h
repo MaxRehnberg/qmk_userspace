@@ -45,6 +45,13 @@ typedef enum {
     RGB_TYPE_ALL       // All LEDs
 } rgb_config_type_t;
 
+// Side flags for split keyboard RGB configurations
+typedef enum {
+    RGB_SIDE_BOTH,     // Apply to both sides
+    RGB_SIDE_LEFT,     // Apply only to left side (master)
+    RGB_SIDE_RIGHT     // Apply only to right side (slave)
+} rgb_side_t;
+
 // Key group configuration structures
 typedef struct {
     uint8_t hue;
@@ -61,6 +68,7 @@ typedef struct {
         } single;
         // RGB_TYPE_ALL needs no additional data
     } data;
+    rgb_side_t side;           // Which side this config applies to (moved to end for compatibility)
 } led_rgb_config_t;
 
 // Helper macros for cleaner configuration
@@ -68,11 +76,11 @@ typedef struct {
 #define MAKE_RGB_ARRAY_DATA(array_ptr, array_count) .array = {.led_indices = (array_ptr), .led_count = (array_count)}
 #define MAKE_RGB_SINGLE_DATA(index) .single = {.led_index = (index)}
 
-#define RGB_CONFIG_ARRAY(h, s, v, array, count) \
-    {.hue = (h), .saturation = (s), .value = (v), .type = RGB_TYPE_ARRAY, .data = {MAKE_RGB_ARRAY_DATA(array, count)}}
+#define RGB_CONFIG_ARRAY(h, s, v, array, count, side_value) \
+    {.hue = (h), .saturation = (s), .value = (v), .type = RGB_TYPE_ARRAY, .data = {MAKE_RGB_ARRAY_DATA(array, count)}, .side = (side_value)}
 
-#define RGB_CONFIG_SINGLE(h, s, v, led_index) \
-    {.hue = (h), .saturation = (s), .value = (v), .type = RGB_TYPE_SINGLE, .data = {MAKE_RGB_SINGLE_DATA(led_index)}}
+#define RGB_CONFIG_SINGLE(h, s, v, led_index, side_value) \
+    {.hue = (h), .saturation = (s), .value = (v), .type = RGB_TYPE_SINGLE, .data = {MAKE_RGB_SINGLE_DATA(led_index)}, .side = (side_value)}
 
 #define RGB_CONFIG_ALL(h, s, v) \
     {.hue = (h), .saturation = (s), .value = (v), .type = RGB_TYPE_ALL}
@@ -86,6 +94,7 @@ typedef struct {
 void set_hsv_by_key_indices(const uint8_t *indices, uint8_t array_size, hsv_t hsv);
 void set_layer_rgb_by_configs(const layer_rgb_config_t* config);
 void set_caps_word_rgb(hsv_t hsv, uint8_t led_min, uint8_t led_max);
+bool is_current_side_master(void);
 
 // External configuration declarations
 extern const layer_rgb_config_t mouse_layer_config;
