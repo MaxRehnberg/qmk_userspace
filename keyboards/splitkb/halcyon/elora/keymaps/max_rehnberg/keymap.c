@@ -3,8 +3,13 @@
 
 #include <math.h>
 #include <stdint.h>
+#include "_wait.h"
+#include "action.h"
 #include "action_layer.h"
+#include "action_util.h"
+#include "caps_word.h"
 #include "color.h"
+#include "community_modules.h"
 #include "info_config.h"
 #include "keycodes.h"
 #include "keymap_swedish.h"
@@ -15,9 +20,12 @@
 #include "rgb_matrix.h"
 #include "rgb_config.h"
 #include "app_switcher.h"
+#include "leader.h"
 #include QMK_KEYBOARD_H
 
 bool caps_word_enabled = false;
+bool is_leader_active = false;
+bool is_leader_shifted = false;
 
 const uint16_t PROGMEM shift_bspc_del[] = {KC_RSFT, KC_BSPC, COMBO_END};
 combo_t key_combos[] = {
@@ -53,6 +61,8 @@ enum layers {
 #define CTL_MINS MT(MOD_RCTL, KC_MINUS)
 #define ALT_ENT MT(MOD_LALT, KC_ENT)
 #define MEH_S MT(MOD_LCTL | MOD_LALT | MOD_LSFT, KC_S) // Meh or S
+
+#define SEL_MEH MT(MOD_LCTL | MOD_LALT | MOD_LSFT, SELWORD) // Meh or Select Word
 
 #define CW_WIN SGUI(KC_GRV)
 #define CCW_WIN LGUI(KC_GRV)
@@ -108,60 +118,14 @@ enum custom_keycodes {
     MS_DBL = SAFE_RANGE,
     APP_KNB,
     APP_CW,
-    APP_CCW
+    APP_CCW,
+    CUT_LN,
+    DEL_BWD,
+    DEL_FWD,
 };
 #define SFTLLCK LSFT_T(KC_0) // Locks layer on tap, shift on hold. KC_0 is arbitrary placeholder
 
-void double_tap(uint16_t keycode) {
-    tap_code(keycode);
-    wait_ms(50);
-    tap_code(keycode);
-}
 
-// Process record user function for custom keycodes
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case SFTLLCK:
-            if (record->tap.count) {
-                if (record->event.pressed) {
-                    // Toggle the lock on the highest layer.
-                    layer_lock_invert(get_highest_layer(layer_state));
-                }
-                return false;
-            }
-            break;
-        case MS_DBL:
-            if (record->event.pressed) {
-                double_tap(MS_BTN1);
-            }
-            return false;
-        case APP_CW:
-            if (record->event.pressed) {
-                app_switch(KC_LEFT);
-            }
-            return false;
-        case APP_CCW:
-            if (record->event.pressed) {
-                app_switch(KC_RIGHT);
-            }
-            return false;
-        case APP_KNB:
-            if (record->event.pressed) {
-                end_app_switcher_with_selection();
-            }
-            return false;
-        default:
-            break;
-    }
-    return true;
-}
-
-// Timeout handling
-void matrix_scan_user(void) {
-    if (app_switcher_active && timer_elapsed(app_switcher_timer) > APP_SWITCHER_TIMEOUT) {
-        end_app_switcher_with_selection();
-    }
-}
 
 // clang-format off 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -196,19 +160,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 /*
  * Base Layer: Gallium
- *
+ * 
  * ,-------------------------------------------.                              ,-------------------------------------------.
- * |  Esc   |   1  |   2  |   3  |   4  |   5  |                              |   6  |   7  |   8  |   9  |   0  |   ´    |
+ * |   F1   |  F2  |  F3  |  F4  |  F5  |  F6  |                              |  F7  |  F8  |  F9  |  F10 |  F11 |   F12  |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
  * |  Tab   |   B  |   L  |   D  |   W  |   V  |                              |   Z  |   Y  |   O  |   U  |   Å  |   !    |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
  * |Hypr/Esc|   N/ |   R/ |   T/ |   C/ |   G  |                              |   K  |   H/ |   A/ |   E/ |   I/ |   Ä    |
  * |        | LCTL | LALT | LSHFT|  LGUI|      |                              |      | RGUI | RSFT | RALT | RCTL |        |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | LShift |   X  |   Q  |   M  |   P  |   J  | [ {  |CapsWd|  | ESC  |  ] } |   Ö  |   F  |   ,  |   .  |   -  | RShift |
+ * | LShift |   X  |   Q  |   M  |   P  |   J  |Enter |CapsWd|  | UNDO | REDO |   Ö  |   F  |   ,  |   .  |   -  | RShift |
  * |        |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
- *                        |Adjust| BSPC |Space/| S/   |   *  |  |   *  | MEH  |Enter/| TAB/ | Menu |
+ *                        |Adjust| BSPC |Space/| S/   |   *  |  |   *  | MEH  |Enter/| TAB/ |Leader|
  *                        |      |      |Nav   | MEH  |      |  |      |      |Mouse | SYM  |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
@@ -216,11 +180,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------'                                              `-----------------------------------'
  */
     [L_GALLIUM] = LAYOUT_elora_hlc(
-     KC_ESC  , KC_1 ,  KC_2   ,  KC_3   , KC_4   , KC_5   ,                                       KC_6   ,  KC_7   ,  KC_8  , KC_9   , KC_0   , KC_EQL ,
+     KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5   , KC_F6  ,                                       KC_F7  ,  KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
      KC_TAB  , KC_B ,  KC_L   ,  KC_D   , KC_W   , KC_V   ,                                       KC_Z   ,  KC_Y   , KC_O   , KC_U   , SE_ARNG, SE_EXLM,
      HYPR_ESC, GH_LCTL,GH_LALT,  GH_LSFT, GH_LGUI, KC_G   ,                                       KC_K   ,  GH_RGUI, GH_RSFT, GH_RALT, GH_RCTL, SE_ADIA,
-     KC_LSFT , KC_X ,  KC_Q   ,  KC_M   , KC_P   , KC_J   , SE_LBRC , CW_TOGG,   KC_ESC, SE_RBRC, SE_ODIA,  KC_F   , KC_COMM, KC_DOT , SE_MINS, KC_RSFT,
-                                 ADJUST , KC_BSPC, SPC_NAV, MEH_S   , QK_REP ,   QK_REP, KC_MEH , ENT_MD ,TAB_MD, KC_APP,
+     KC_LSFT , KC_X ,  KC_Q   ,  KC_M   , KC_P   , KC_J   , KC_ENT  , CW_TOGG,   REDO,   UNDO   , SE_ODIA,  KC_F   , KC_COMM, KC_DOT , SE_MINS, KC_RSFT,
+                                 ADJUST , KC_BSPC, SPC_NAV, MEH_S   , QK_REP ,   QK_REP, KC_MEH , ENT_MD ,  TAB_MD , QK_LEAD,
      KC_MUTE, KC_NO,  KC_NO, KC_NO, KC_NO,                                                          KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
     ),
 /*
@@ -256,12 +220,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |        |      |      |      |      |      |                              |      |      |      |      |      |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        |  <   |  >   |  '   |  "   |  -   |                              |   ?  |  [   |  ]   |  &   |  %   |   ;    |
+ * |        |  <   |  >   |  '   |  "   |  -   |                              |   ?  |  [   |  ]   |  &   |  %   |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        |      |  *   |  /   |  =   |  |   |                              |   ;  |  (   |  )   |   :  |  ~   |   ^    |
+ * |        |   !  |  *   |  /   |  =   |  |   |                              |   ;  |  (   |  )   |   :  |  ~   |   ^    |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ |   \  |  +   |  \   |  _   |  @   |  $   |      |  |      |      |   #  |  {   |  }   |  .   |  -   | Shift/ |
- * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
+ * | Shift/ |   \  |  +   |  \   |  _   |  @   |  $   |      |  |      |      |   #  |  {   |  }   |  .   |back  | Shift/ |
+ * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |tick  | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |      |      |      |      |  |      |      |      |      |      |
  *                        |      |      |      |      |      |  |      |      |      |      |      |
@@ -272,9 +236,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
     [L_SYM] = LAYOUT_elora_hlc(
       _______, _______, _______, _______, _______, _______,                                         _______, _______ , _______  , _______, _______, _______,
-      KC_NO  , KC_GRV,S(KC_GRV),SE_QUOT, SE_DQUO, SE_MINS,                                          SE_QUES, SE_LBRC  ,SE_RBRC   , SE_AMPR, SE_PERC, SE_SCLN,
-      KC_NO  , KC_NO , SE_ASTR, SE_SLSH, SE_EQL , A(KC_7),                                          SE_SCLN, SE_LPRN  ,SE_RPRN   , SE_COLN, SE_TILD, SE_CIRC,
-      SFTLLCK, KC_NO , SE_PLUS, BKSLSH , SE_UNDS, SE_AT  , SE_DLR , KC_NO  ,     _______, _______,  SE_HASH, LSA(KC_8),LSA(KC_9), KC_DOT,  _______, SFTLLCK,
+      KC_NO  , KC_GRV,S(KC_GRV),SE_QUOT, SE_DQUO, SE_MINS,                                          SE_QUES, SE_LBRC  ,SE_RBRC  , SE_AMPR, SE_PERC, KC_NO,
+      KC_NO  , SE_EXLM, SE_ASTR, SE_SLSH, SE_EQL , A(KC_7),                                         SE_SCLN, SE_LPRN  ,SE_RPRN  , SE_COLN, SE_TILD, SE_CIRC,
+      SFTLLCK, KC_NO , SE_PLUS, BKSLSH , SE_UNDS, SE_AT  , SE_DLR , KC_NO  ,     _______, _______,  SE_HASH, LSA(KC_8),LSA(KC_9), KC_DOT,  SE_ACUT, SFTLLCK,
                                 _______, _______, _______, _______, _______,     _______, _______,  _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                               _______, _______, _______, _______, _______
     ),
@@ -293,8 +257,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * | Shift/ | Cut  | Home |      | End  |      |      |      |  |Select|Select|   -  |  1/  |  2/  |  3/  |  %/  |   >    |
  * | lock   |      |      |      |      |      |      |      |  |line  |Wd bk |      |      |      |      |      |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
- *                        |      |      |      |      |      |  |Select|      |   0  |  (   |  )   |
- *                        |      |      |      |      |      |  |Word  |      |      |      |      |
+ *                        |      |      |      |      |      |  |      |Slt Wd|   0  |  (   |  )   |
+ *                        |      |      |      |      |      |  |      |/MEH  |      |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
  * |      |      |       |      |      |                                              |      |      |       |      |      |
@@ -304,8 +268,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5   , KC_F6  ,                                          KC_F7  , KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
       _______, PASTE  , KC_PGUP, KC_UP  , KC_PGDN , REDO   ,                                          SE_PLUS, KC_7   , KC_8   , KC_9   , SE_ASTR, SE_COLN,
       _______, COPY   , KC_LEFT, KC_DOWN, KC_RIGHT, UNDO   ,                                          SE_EQL , NV_RGUI, NV_RSFT, NV_RALT, NV_RCTL, KC_GRV,
-      SFTLLCK, CUT    , KC_HOME, KC_NO  , KC_END , _______, _______, _______,      SELLINE, SELWBAK, SE_MINS, KC_1   , KC_2   , KC_3   , PERC   , S(KC_GRV),
-                                 _______, _______ , _______, _______, _______,      SELWORD, _______, KC_0   , SE_LPRN, SE_RPRN,
+      SFTLLCK, CUT    , KC_HOME, KC_NO  , KC_END  , _______, _______, _______,     SELLINE , SELWBAK, SE_MINS, KC_1   , KC_2   , KC_3   , PERC   , S(KC_GRV),
+                                 _______, _______ , _______, _______, _______,     SELWORD , _______, KC_0   , SE_LPRN, SE_RPRN,
      _______, _______       ,  _______, _______, _______ ,                                                            APP_KNB, _______, _______, _______, _______
     ),
 
@@ -407,8 +371,168 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
-// RGB Profiles - Functions moved to rgb_config.c
+void double_tap(uint16_t keycode) {
+    tap_code16(keycode);
+    wait_ms(50);
+    tap_code16(keycode);
+}
 
+void cut_line(void) {
+    register_code(KC_LGUI);
+    wait_ms(10);
+    tap_code(KC_LEFT);
+    wait_ms(10);
+    register_code(KC_LSFT);
+    wait_ms(10);
+    tap_code(KC_RIGHT);
+    unregister_code(KC_LSFT);
+    wait_ms(10);
+    tap_code(KC_X);
+    unregister_code(KC_LGUI);
+}
+
+void delete_word_backwards(void) {
+    register_code(KC_LGUI);
+    register_code(KC_LSFT);
+    tap_code(KC_LEFT);
+    unregister_code(KC_LGUI);
+    unregister_code(KC_LSFT);
+    tap_code(KC_BSPC);
+}
+
+void delete_word_forwards(void) {
+    register_code(KC_LGUI);
+    register_code(KC_LSFT);
+    tap_code(KC_RIGHT);
+    unregister_code(KC_LGUI);
+    unregister_code(KC_LSFT);
+    tap_code(KC_BSPC);
+}   
+
+// Combo key handling
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case KC_BSPC:
+            if (record->event.pressed) {
+                // if shift is held, treat as delete. otherwise default backspace
+                if (get_mods() & MOD_MASK_SHIFT) {
+                    tap_code(KC_DEL);
+                    return false;
+                }
+            }
+            break;
+        case CUT_LN:
+            if (record->event.pressed) {
+                cut_line();
+            }
+            return false;
+        case DEL_BWD:
+            if (record->event.pressed) {
+                delete_word_backwards();
+            }
+            return false;
+        case DEL_FWD:
+            if (record->event.pressed) {
+                delete_word_forwards();
+            }
+            return false;
+        case SFTLLCK:
+            if (record->tap.count) {
+                if (record->event.pressed) {
+                    // Toggle the lock on the highest layer.
+                    layer_lock_invert(get_highest_layer(layer_state));
+                }
+                return false;
+            }
+            break;
+        case MS_DBL:
+            if (record->event.pressed) {
+                double_tap(MS_BTN1);
+            }
+            return false;
+        case APP_CW:
+            if (record->event.pressed) {
+                app_switch(KC_LEFT);
+            }
+            return false;
+        case APP_CCW:
+            if (record->event.pressed) {
+                app_switch(KC_RIGHT);
+            }
+            return false;
+        case APP_KNB:
+            if (record->event.pressed) {
+                end_app_switcher_with_selection();
+            }
+            return false;
+        default:
+            break;
+    }
+    return true;
+}
+
+void leader_start_user(void){
+    is_leader_active = true;
+}
+
+void leader_end_user(void) {
+    if (leader_sequence_one_key(SE_AT)) {
+        SEND_STRING("max.rehnberg@odevo.com");
+    } else if (leader_sequence_one_key(KC_E)) {
+        // é
+        tap_code16(SE_ACUT);
+        tap_code16(KC_E);
+    } else if (leader_sequence_two_keys(KC_T, KC_E)) {
+        // É
+        tap_code16(SE_ACUT);
+        tap_code16(S(KC_E));
+    }else if (leader_sequence_one_key(KC_F)) {
+        // send f"" for Python f-strings and place cursor in between
+        tap_code(KC_F);
+        double_tap(SE_DQUO);
+        tap_code(KC_LEFT);
+    }else if (leader_sequence_two_keys(KC_E, KC_Q)) {
+        // ==
+        double_tap(SE_EQL);
+    } else if (leader_sequence_two_keys(KC_N, KC_E)) {
+        // !=
+        tap_code16(SE_EXLM);
+        tap_code16(SE_EQL);
+    } else if (leader_sequence_two_keys(KC_G, KC_E)) {
+        // >=
+        tap_code16(S(KC_GRV));
+        tap_code16(SE_EQL);
+    } else if (leader_sequence_two_keys(KC_L, KC_E)) {
+        // <=
+        tap_code16(KC_GRV);
+        tap_code16(SE_EQL);
+    } else if (leader_sequence_two_keys(KC_A, KC_R)) {
+        // -> : (arrow)
+        tap_code16(SE_MINS);
+        tap_code16(S(KC_GRV));
+        tap_code16(KC_SPACE);
+        tap_code16(SE_COLN);
+        tap_code16(KC_LEFT);
+    } else if (leader_sequence_one_key(KC_BSPC)) {
+        cut_line();
+    } else if (leader_sequence_two_keys(KC_R, KC_BACKSPACE)) {
+        delete_word_backwards();
+    } else if (leader_sequence_two_keys(KC_C, KC_BSPC)) {
+        delete_word_forwards();
+    }
+
+    is_leader_active = false;
+}
+
+
+// Timeout handling
+void matrix_scan_user(void) {
+    if (app_switcher_active && timer_elapsed(app_switcher_timer) > APP_SWITCHER_TIMEOUT) {
+        end_app_switcher_with_selection();
+    }
+}
+
+// RGB Profiles - Functions moved to rgb_config.c
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // set base color on all keys
     set_layer_rgb_by_configs(&base_layer_config);
@@ -417,24 +541,34 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         set_layer_rgb_by_configs(&caps_word_layer_config);
     }
 
-    // set color on layer
-    uint8_t layer = get_highest_layer(layer_state | default_layer_state);
-    switch (layer) {
-        case L_NAV: 
-            set_layer_rgb_by_configs(&nav_layer_config);
-            break;
-        case L_MS:
-            set_layer_rgb_by_configs(&mouse_layer_config);
-            break;
-        case L_SYM:
-            set_layer_rgb_by_configs(&symbol_layer_config);
-            break;
-        case L_ADJUST:
-            set_layer_rgb_by_configs(&adjust_layer_config);
-            break;
-        default:
-            // Do nothing for other layers
-            break;
+    if (is_leader_active) {
+        set_layer_rgb_by_configs(&leader_layer_config);
+    }
+
+    // set color on all active layers (from lowest to highest priority)
+    layer_state_t active_layers = layer_state | default_layer_state;
+    
+    // Check each layer in order (higher layers will override lower ones)
+    for (uint8_t layer = 0; layer < MAX_LAYER; layer++) {
+        if (IS_LAYER_ON_STATE(active_layers, layer)) {
+            switch (layer) {
+                case L_NAV: 
+                    set_layer_rgb_by_configs(&nav_layer_config);
+                    break;
+                case L_MS:
+                    set_layer_rgb_by_configs(&mouse_layer_config);
+                    break;
+                case L_SYM:
+                    set_layer_rgb_by_configs(&symbol_layer_config);
+                    break;
+                case L_ADJUST:
+                    set_layer_rgb_by_configs(&adjust_layer_config);
+                    break;
+                default:
+                    // Do nothing for other layers
+                    break;
+            }
+        }
     }
  
     return false;
@@ -448,6 +582,7 @@ void caps_word_set_user(bool active) {
     }
 }
 
+// rgb matrix shutdown user function
 bool shutdown_user(bool jump_to_bootloader) {
     
     if (jump_to_bootloader) {
@@ -467,6 +602,8 @@ bool get_speculative_hold(uint16_t keycode, keyrecord_t* record) {
   return (QK_MOD_TAP_GET_MODS(keycode) & (MOD_LALT | MOD_LGUI)) == 0;
 }
 
+
+// Caps Word behavior
 bool caps_word_press_user(uint16_t keycode) {
     switch (keycode) {
         // Keycodes that continue Caps Word, with shift applied.
@@ -495,6 +632,7 @@ bool caps_word_press_user(uint16_t keycode) {
     }
 }
 
+// Chorded hold behavior, overrides default to allow some one-handed chords.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
                       uint16_t other_keycode, keyrecord_t* other_record) {
     // Exceptionally allow some one-handed chords for hotkeys.

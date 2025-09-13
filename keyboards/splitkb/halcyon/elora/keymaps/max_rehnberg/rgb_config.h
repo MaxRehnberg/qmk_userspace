@@ -37,6 +37,8 @@
 #define LED_CW_UNDERGLOW 5
 #define LED_ADJUST 10
 
+#define LED_LEADER 10
+#define LED_LEADER_UNDERGLOW 4
 
 // RGB configuration types
 typedef enum {
@@ -104,3 +106,4 @@ extern const layer_rgb_config_t symbol_layer_config;
 extern const layer_rgb_config_t base_layer_config;
 extern const layer_rgb_config_t bootloader_config;
 extern const layer_rgb_config_t caps_word_layer_config;
+extern const layer_rgb_config_t leader_layer_config;

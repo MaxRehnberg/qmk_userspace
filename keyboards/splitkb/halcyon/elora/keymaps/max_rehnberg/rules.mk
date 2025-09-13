@@ -7,6 +7,7 @@ MOUSE_KEY_ENABLE = yes
 RGB_MATRIX_ENABLE = yes
 RGB_MATRIX_DRIVER = ws2812
 SPLIT_KEYBOARD = yes
+LEADER_ENABLE = yes
 
 
 # Add custom RGB configuration

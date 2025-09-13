@@ -51,14 +51,20 @@ const layer_rgb_config_t nav_layer_config = {
         RGB_CONFIG_SINGLE(4, 255, 175, LED_LAYER_NAV, RGB_SIDE_LEFT),    // Orange layer key (single LED)
         RGB_CONFIG_ARRAY(200, 255, 150, num_pad, 9, RGB_SIDE_RIGHT)
     },
-    3  
+    3
+};
+
+static const uint8_t alpha_keys[] = {13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29};
+static const uint8_t sym_key = 8;
+
+static const led_rgb_config_t symbol_layer_configs[] = {
+    RGB_CONFIG_ARRAY(200, 255, 150, alpha_keys, 15, RGB_SIDE_BOTH),
+    RGB_CONFIG_SINGLE(200, 255, 150, sym_key, RGB_SIDE_RIGHT)
 };
 
 const layer_rgb_config_t symbol_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_ALL(200, 255, 150),                        // Dim purple base for all keys
-    },
-    1
+    symbol_layer_configs,
+    2
 };
 
 // Adjust layer configuration
@@ -75,6 +81,14 @@ const layer_rgb_config_t caps_word_layer_config = {
     (const led_rgb_config_t[]){
         RGB_CONFIG_SINGLE(0, 255, 100, LED_CAPS_WORD, RGB_SIDE_LEFT),   // Red caps word key
         RGB_CONFIG_SINGLE(0, 255, 100, LED_CW_UNDERGLOW, RGB_SIDE_LEFT) // Red underglow LED
+    },
+    2
+};
+
+const layer_rgb_config_t leader_layer_config = {
+    (const led_rgb_config_t[]){
+        RGB_CONFIG_SINGLE(0, 255, 100, LED_LEADER, RGB_SIDE_RIGHT),
+        RGB_CONFIG_SINGLE(0, 255, 100, LED_LEADER_UNDERGLOW, RGB_SIDE_RIGHT)
     },
     2
 };
@@ -133,12 +147,4 @@ void set_layer_rgb_by_configs(const layer_rgb_config_t* config) {
                 break;
         }
     }
-}
-
-void set_caps_word_rgb(hsv_t hsv, uint8_t led_min, uint8_t led_max) {
-    hsv.h = 0; // red
-    hsv.s = 255;
-    rgb_t caps_word_rgb = hsv_to_rgb(hsv);
-    RGB_MATRIX_INDICATOR_SET_COLOR(LED_CW_UNDERGLOW, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Underglow LED
-    RGB_MATRIX_INDICATOR_SET_COLOR(LED_CAPS_WORD, caps_word_rgb.r, caps_word_rgb.g, caps_word_rgb.b); // Key
 }

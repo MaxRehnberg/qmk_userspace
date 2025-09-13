@@ -24,3 +24,8 @@
 #define QUICK_TAP_TERM 0
 
 #define CAPS_WORD_IDLE_TIMEOUT 8000
+
+// Leader key configuration
+#define LEADER_PER_KEY_TIMING
+#define LEADER_TIMEOUT 250
+#define LEADER_NO_TIMEOUT
