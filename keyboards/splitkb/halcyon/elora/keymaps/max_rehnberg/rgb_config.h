@@ -31,14 +31,14 @@
 #define LED_THUMB_KEY_5 11
 #define LED_THUMB_KEY_6 12
 
-#define LED_LAYER_NAV LED_THUMB_KEY_2
+#define LED_LAYER_NAV LED_THUMB_KEY_1 
 #define LED_LAYER_ADJUST LED_THUMB_KEY_4
 #define LED_CAPS_WORD LED_THUMB_KEY_5
 #define LED_CW_UNDERGLOW 5
 #define LED_ADJUST 10
 
-#define LED_LEADER 10
-#define LED_LEADER_UNDERGLOW 4
+#define LED_LEADER 7
+#define LED_LEADER_UNDERGLOW 5
 
 // RGB configuration types
 typedef enum {

@@ -40,7 +40,7 @@ const layer_rgb_config_t mouse_layer_config = {
     (const led_rgb_config_t[]){
         RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),      // Yellow arrow keys
         RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3, RGB_SIDE_RIGHT), // Green acceleration keys
-        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_3, RGB_SIDE_RIGHT) // Yellow layer indicator
+        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_2, RGB_SIDE_RIGHT) // Yellow layer indicator
     },
     3 // number of configs
 };
