@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "_wait.h"
 #include "action.h"
 #include "action_layer.h"
@@ -11,6 +13,7 @@
 #include "color.h"
 #include "community_modules.h"
 #include "info_config.h"
+#include "keyboard.h"
 #include "keycodes.h"
 #include "keymap_swedish.h"
 #include "process_combo.h"
@@ -25,12 +28,11 @@
 #include "app_switcher.h"
 #include "leader.h"
 #include "select_word.h"
+#include "transactions.h"
 #include QMK_KEYBOARD_H
 
-bool caps_word_enabled = false;
 bool is_leader_active = false;
-
-
+bool is_leader_changed = false;
 
 enum layers {
     L_GALLIUM =0,
@@ -44,7 +46,6 @@ enum layers {
 
 #define BKSLSH LSA(KC_7)
 #define PERC LSFT(KC_5)
-
 // Aliases for readability
 #define QWERTY DF(L_QWERTY)
 #define GALLIUM DF(L_GALLIUM)
@@ -60,7 +61,7 @@ enum layers {
 #define CTL_QUOT MT(MOD_RCTL, KC_QUOTE)
 #define CTL_MINS MT(MOD_RCTL, KC_MINUS)
 #define ALT_ENT MT(MOD_LALT, KC_ENT)
-#define MEH_S MT(MOD_LCTL | MOD_LALT | MOD_LSFT, KC_S) // Meh or S
+#define MEH_S MT(MOD_LCTL | MOD_LALT | MOD_LSFT, SE_S) // Meh or S
 
 
 #define CW_WIN SGUI(KC_GRV)
@@ -71,27 +72,27 @@ enum layers {
 
 // QWERTY
 // Left side
-#define QH_LGUI MT(MOD_LGUI, KC_F)
-#define QH_LSFT MT(MOD_LSFT, KC_D)
-#define QH_LALT MT(MOD_LALT, KC_S)
-#define QH_LCTL MT(MOD_LCTL, KC_A)
+#define QH_LGUI MT(MOD_LGUI, SE_F)
+#define QH_LSFT MT(MOD_LSFT, SE_D)
+#define QH_LALT MT(MOD_LALT, SE_S)
+#define QH_LCTL MT(MOD_LCTL, SE_A)
 // Right side
-#define QH_RGUI MT(MOD_RGUI, KC_J)
-#define QH_RSFT MT(MOD_RSFT, KC_K)
-#define QH_RALT MT(MOD_RALT, KC_L)
+#define QH_RGUI MT(MOD_RGUI, SE_J)
+#define QH_RSFT MT(MOD_RSFT, SE_K)
+#define QH_RALT MT(MOD_RALT, SE_L)
 #define QH_RCTL MT(MOD_RCTL, SE_ODIA)
 
 // Gallium
 // Left side
-#define GH_LGUI MT(MOD_LGUI, KC_C)
-#define GH_LSFT MT(MOD_LSFT, KC_T)
-#define GH_LALT MT(MOD_LALT, KC_R)
-#define GH_LCTL MT(MOD_LCTL, KC_N)
+#define GH_LGUI MT(MOD_LGUI, SE_C)
+#define GH_LSFT MT(MOD_LSFT, SE_T)
+#define GH_LALT MT(MOD_LALT, SE_R)
+#define GH_LCTL MT(MOD_LCTL, SE_N)
 // Right side
-#define GH_RGUI MT(MOD_RGUI, KC_H)
-#define GH_RSFT MT(MOD_RSFT, KC_A)
-#define GH_RALT MT(MOD_RALT, KC_E)
-#define GH_RCTL MT(MOD_RCTL, KC_I)
+#define GH_RGUI MT(MOD_RGUI, SE_H)
+#define GH_RSFT MT(MOD_RSFT, SE_A)
+#define GH_RALT MT(MOD_RALT, SE_E)
+#define GH_RCTL MT(MOD_RCTL, SE_I)
 
 // Nav
 // Right side
@@ -125,17 +126,18 @@ enum custom_keycodes {
     APP_KNB,
     APP_CW,
     APP_CCW,
-    CUT_LN,
     DEL_BWD,
     DEL_FWD,
-    LEAD 
+    LEAD,
+    LARCANE,
+    RARCANE,
 };
 #define SFTLLCK LSFT_T(KC_0) // Locks layer on tap, shift on hold. KC_0 is arbitrary placeholder
 #define MEH_LD MT(MOD_LCTL | MOD_LALT | MOD_LSFT, LEAD) // Meh or Leader
 
-const uint16_t PROGMEM arng_combo[] = {GH_RSFT, KC_O, COMBO_END}; // Å
-const uint16_t PROGMEM adia_combo[] = {GH_RSFT, KC_DOT, COMBO_END}; // Ä
-const uint16_t PROGMEM odia_combo[] = {KC_O, GH_RALT, COMBO_END}; // Ö
+const uint16_t PROGMEM arng_combo[] = {GH_RSFT, SE_O, COMBO_END}; // Å
+const uint16_t PROGMEM adia_combo[] = {GH_RSFT, SE_COMM, COMBO_END}; // Ä
+const uint16_t PROGMEM odia_combo[] = {SE_U, GH_RALT, COMBO_END}; // Ö
 
 
 combo_t key_combos[] = {
@@ -172,7 +174,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      KC_TAB  ,   KC_Q ,  KC_W   ,  KC_E  ,   KC_R ,   KC_T ,                                         KC_Y   ,   KC_U ,   KC_I ,   KC_O ,   KC_P , SE_ARNG,
      HYPR_ESC, QH_LCTL,  QH_LALT,QH_LSFT , QH_LGUI,   KC_G ,                                         KC_H   ,QH_RGUI , QH_RSFT, QH_RALT, QH_RCTL, SE_ADIA,
      KC_LSFT ,   KC_Z ,  KC_X   ,  KC_C  ,   KC_V ,   KC_B , SE_LBRC,  CW_TOGG,    KC_ESC , SE_RBRC, KC_N   ,   KC_M , SE_COMM, SE_DOT , SE_MINS, KC_RSFT,
-                                  ADJUST , KC_BSPC, SPC_NAV, KC_MEH ,  QK_REP ,    QK_REP , KC_MEH , ENT_SYM, TAB_MD, KC_APP,
+                                  ADJUST , KC_BSPC, SPC_NAV, KC_MEH ,  LARCANE,    RARCANE, KC_MEH , ENT_SYM, TAB_MD, KC_APP,
      KC_MUTE, KC_NO,  KC_NO, KC_NO, KC_NO,                                                                KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
     ),
 /*
@@ -197,11 +199,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------'                                              `-----------------------------------'
  */
     [L_GALLIUM] = LAYOUT_elora_hlc(
-     KC_F1  , KC_F2  , KC_F3  ,  KC_F4  , KC_F5  , KC_F6  ,                                       KC_F7  ,  KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
-     PREFIX , KC_B   ,  KC_L  ,  KC_D   , KC_W   , KC_V   ,                                       KC_Z   ,  KC_Y   , KC_O   , KC_U   , SE_EXLM, KC_NO  ,
-     HYPR_ESC, GH_LCTL,GH_LALT,  GH_LSFT, GH_LGUI, KC_G   ,                                       KC_K   ,  GH_RGUI, GH_RSFT, GH_RALT, GH_RCTL, KC_NO  ,
-     KC_LSFT , KC_X ,  KC_Q   ,  KC_M   , KC_P   , KC_J   , KC_BSPC , CW_TOGG,   KC_DEL , MEH_LD ,SE_QUOT,  KC_F   , KC_COMM, KC_DOT , SE_MINS, KC_RSFT,
-                                 ADJUST , CUT    , MEH_S  , SPC_NAV , QK_REP ,   QK_REP , ENT_SYM, TAB_MD,  UNDO   , REDO   ,
+     KC_F1   , KC_F2  , KC_F3  ,  KC_F4  , KC_F5  , KC_F6  ,                                       KC_F7  ,  KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
+     PREFIX  , SE_B   ,  SE_L  ,  SE_D   , SE_W   , SE_V   ,                                       SE_Z   ,  SE_Y   , SE_O   , SE_U   , SE_EXLM, KC_NO  ,
+     HYPR_ESC, GH_LCTL,GH_LALT,  GH_LSFT, GH_LGUI, KC_G    ,                                       SE_K   ,  GH_RGUI, GH_RSFT, GH_RALT, GH_RCTL, KC_NO  ,
+     KC_LSFT , SE_X ,  SE_Q   ,  SE_M   , SE_P   , SE_J    , KC_BSPC , CW_TOGG,   KC_DEL , MEH_LD ,SE_QUOT,  SE_F   , KC_COMM, KC_DOT , SE_MINS, KC_RSFT,
+                                 ADJUST , CUT    , MEH_S   , SPC_NAV , LARCANE,   RARCANE, ENT_SYM, TAB_MD,  UNDO   , REDO   ,
      KC_MUTE, KC_NO,  KC_NO, KC_NO, KC_NO,                                                          KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
     ),
 /*
@@ -226,8 +228,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      KC_ESC  ,   KC_1 ,  KC_2   ,  KC_3  ,   KC_4 ,   KC_5 ,                                        KC_6  ,   KC_7 ,   KC_8   ,   KC_9  ,   KC_0 , KC_RALT,
      KC_TAB  ,   KC_Q ,  KC_W   ,  KC_E  ,   KC_R ,   KC_T ,                                        KC_Y  ,   KC_U ,   KC_I   ,   KC_O  ,   KC_P , SE_ARNG,
      HYPR_ESC,   KC_A ,  KC_S   ,  KC_D  ,   KC_F ,   KC_G ,                                        KC_H  ,   KC_J ,   KC_K   ,   KC_L  , SE_ODIA, SE_ADIA,
-     KC_LSFT ,   KC_Z ,  KC_X   ,  KC_C  ,   KC_V ,   KC_B , SE_LBRC, CW_TOGG,    KC_ESC , SE_RBRC, KC_N  ,   KC_M ,   KC_COMM,   KC_DOT, KC_MINS, KC_RSFT,
-                                  ADJUST , KC_BSPC,  KC_SPC,  KC_LGUI,  QK_REP,   QK_REP , KC_RGUI, KC_ENT,  KC_TAB, KC_APP,
+     KC_LSFT ,   KC_Z ,  KC_X   ,  KC_C  ,   KC_V ,   KC_B ,  SE_LBRC, CW_TOGG,    KC_ESC , SE_RBRC, KC_N  ,   KC_M ,   KC_COMM,   KC_DOT, KC_MINS, KC_RSFT,
+                                  ADJUST , KC_BSPC,  KC_SPC,  KC_LGUI,  QK_REP,    QK_REP , KC_RGUI, KC_ENT,  KC_TAB, KC_APP,
      KC_MUTE, KC_NO,  KC_NO, KC_NO, KC_NO,                                                                KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
     ),
 
@@ -255,7 +257,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       _______, _______, _______, _______, _______, _______,                                         _______, _______ , _______  , _______, _______, _______,
       KC_NO  , KC_GRV,S(KC_GRV),SE_QUOT, SE_DQUO, SE_MINS,                                          SE_QUES, SE_LBRC  ,SE_RBRC  , SE_AMPR, _______, SE_PERC,
       KC_NO  , SE_EXLM, SE_ASTR, SE_SLSH, SE_EQL , A(KC_7),                                         SE_SCLN, SE_LPRN  ,SE_RPRN  , SE_COLN, SE_TILD, SE_CIRC,
-      SFTLLCK, KC_NO , SE_PLUS, BKSLSH , SE_UNDS, SE_AT  , SE_DLR , KC_NO  ,     _______, _______,  SE_HASH, LSA(KC_8),LSA(KC_9), KC_DOT,  SE_ACUT, SFTLLCK,
+      SFTLLCK, KC_NO  , SE_PLUS, BKSLSH , SE_UNDS, SE_AT  , SE_DLR , KC_NO ,     _______, _______,  SE_HASH, LSA(KC_8),LSA(KC_9), KC_DOT,  SE_ACUT, SFTLLCK,
                                 _______, _______, _______, _______, _______,     _______, _______,  _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                               _______, _______, _______, _______, _______
     ),
@@ -388,24 +390,133 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+
+bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
+                            uint8_t* remembered_mods) {
+    switch (keycode) {
+        case CW_TOGG:
+        case KC_ESC:
+        case LARCANE:
+        case RARCANE:
+            return false;  // Magic keys will ignore the above keycodes.
+    }
+    return true;  // Other keys can be repeated.
+}
+
+// An enhanced version of SEND_STRING: if Caps Word is active, the Shift key is
+// held while sending the string. Additionally, the last key is set such that if
+// the Repeat Key is pressed next, it produces `repeat_keycode`.
+#define MAGIC_STRING(str, repeat_keycode) \
+        magic_send_string_P(PSTR(str), (repeat_keycode))
+ 
+static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
+    uint8_t saved_mods = 0;
+ 
+  if (is_caps_word_on()) { // If Caps Word is on, save the mods and hold Shift.
+    saved_mods = get_mods();
+    register_mods(MOD_BIT(KC_LSFT));
+  }
+ 
+  send_string_with_delay_P(str, TAP_CODE_DELAY);  // Send the string.
+  set_last_keycode(repeat_keycode); // 2024-03-09 Disabled sending of string for mag-rep / rep-mag consistency.
+ 
+  // If Caps Word is on, restore the mods.
+  if (is_caps_word_on()) {
+    set_mods(saved_mods);
+  }
+}
+static void process_right_arcane(uint16_t keycode, uint8_t mods) { // RARCANE definitions
+    switch (keycode) {
+        // left side: repeat
+        case SE_B: { MAGIC_STRING("b",       SE_B); } break;
+        case SE_L: { MAGIC_STRING("l",       SE_L); } break;
+        case SE_D: { MAGIC_STRING("d",       SE_D); } break;
+        case SE_W: { MAGIC_STRING("w",       SE_W); } break;
+        case SE_V: { MAGIC_STRING("v",       SE_V); } break;
+
+        case GH_LCTL: { MAGIC_STRING("n",    GH_LCTL); } break;
+        case GH_LALT: { MAGIC_STRING("r",    GH_LALT); } break;
+        case GH_LSFT: { MAGIC_STRING("t",    GH_LSFT); } break;
+        case GH_LGUI: { MAGIC_STRING("c",    GH_LGUI); } break;
+        case SE_G: { MAGIC_STRING("g",       SE_G); } break;
+
+        case SE_X: { MAGIC_STRING("x",       SE_X); } break;
+        case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
+        case SE_M: { MAGIC_STRING("m",       SE_M); } break;
+        case SE_P: { MAGIC_STRING("p",       SE_P); } break;
+        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
+
+        case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
+        
+        // right side: magic
+        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
+        case SE_O: { MAGIC_STRING("f",       SE_F); } break;
+        case SE_U: { MAGIC_STRING("e",       SE_E); } break;
+        case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
+
+        case SE_K: { MAGIC_STRING("y",       SE_Y); } break;
+        case GH_RGUI: { MAGIC_STRING("y",    GH_RGUI); } break;
+        case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
+        case GH_RALT: { MAGIC_STRING("u",    GH_RALT); } break;
+        case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
+
+        case SE_F: { MAGIC_STRING("o",       SE_O); } break;
+
+        // default case, repeat
+        default: tap_code16(keycode);
+        
+    }
+}
+static void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE definitions
+    switch (keycode) {
+        // left side: magic
+        case SE_B: { MAGIC_STRING("j",       SE_J); } break;
+        case SE_L: { MAGIC_STRING("r",       GH_LALT); } break;
+        case SE_D: { MAGIC_STRING("m",       SE_B); } break;
+        case SE_W: { MAGIC_STRING("w",       SE_W); } break;
+        case SE_V: { MAGIC_STRING("v",       SE_V); } break;
+
+        case GH_LCTL: { MAGIC_STRING("n",    GH_LCTL); } break;
+        case GH_LALT: { MAGIC_STRING("l",    SE_L); } break;
+        case GH_LSFT: { MAGIC_STRING("m",    SE_M); } break;
+        case GH_LGUI: { MAGIC_STRING("c",    GH_LGUI); } break;
+        case SE_G: { MAGIC_STRING("n",       SE_N); } break;
+
+        case SE_X: { MAGIC_STRING("x",       SE_X); } break;
+        case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
+        case SE_M: { MAGIC_STRING("b",       SE_B); } break;
+        case SE_P: { MAGIC_STRING("p",       SE_P); } break;
+        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
+
+        case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
+        
+        // right side: repeat
+        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
+        case SE_O: { MAGIC_STRING("o",       SE_O); } break;
+        case SE_U: { MAGIC_STRING("u",       SE_U); } break;
+        case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
+
+        case SE_K: { MAGIC_STRING("k",       SE_K); } break;
+        case GH_RGUI: { MAGIC_STRING("h",    GH_RGUI); } break;
+        case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
+        case GH_RALT: { MAGIC_STRING("e",    GH_RALT); } break;
+        case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
+
+        case SE_F: { MAGIC_STRING("f",       SE_F); } break;
+
+        // default case, repeat
+        default: tap_code16(keycode);
+        
+    }
+}
+
+
 void double_tap(uint16_t keycode) {
     tap_code16(keycode);
     wait_ms(50);
     tap_code16(keycode);
-}
-
-void cut_line(void) {
-    register_code(KC_LGUI);
-    wait_ms(10);
-    tap_code(KC_LEFT);
-    wait_ms(10);
-    register_code(KC_LSFT);
-    wait_ms(10);
-    tap_code(KC_RIGHT);
-    unregister_code(KC_LSFT);
-    wait_ms(10);
-    tap_code(KC_X);
-    unregister_code(KC_LGUI);
 }
 
 void delete_word_backwards(void) {
@@ -428,6 +539,29 @@ void delete_word_forwards(void) {
 
 // Combo key handling
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Handle Arcane keys
+     if (record->event.pressed) {
+        switch (keycode) {
+            case LARCANE: { process_left_arcane(get_last_keycode(), get_last_mods()); } return false;
+            case RARCANE: { process_right_arcane(get_last_keycode(), get_last_mods()); } return false;
+        }
+    }
+    
+    // Handle knob
+     if (record->event.pressed) {
+        switch (keycode){
+            case APP_CW:
+                app_switch(KC_LEFT);
+                return false;
+            case APP_CCW:
+                app_switch(KC_RIGHT);
+                return false;
+            case APP_KNB:
+                end_app_switcher_with_selection();
+                return false;
+        }
+    }
+
     switch (keycode) {
         case MEH_LD:
         case KC_SCROLL_LOCK:
@@ -436,11 +570,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-        case CUT_LN:
-            if (record->event.pressed) {
-                cut_line();
-            }
-            return false;
         case DEL_BWD:
             if (record->event.pressed) {
                 delete_word_backwards();
@@ -465,21 +594,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 double_tap(MS_BTN1);
             }
             return false;
-        case APP_CW:
-            if (record->event.pressed) {
-                app_switch(KC_LEFT);
-            }
-            return false;
-        case APP_CCW:
-            if (record->event.pressed) {
-                app_switch(KC_RIGHT);
-            }
-            return false;
-        case APP_KNB:
-            if (record->event.pressed) {
-                end_app_switcher_with_selection();
-            }
-            return false;
         default:
             break;
     }
@@ -488,6 +602,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 void leader_start_user(void){
     is_leader_active = true;
+    is_leader_changed = true;
 }
 
 void leader_end_user(void) {
@@ -528,9 +643,6 @@ void leader_end_user(void) {
         tap_code16(KC_SPACE);
         tap_code16(SE_COLN);
         tap_code16(KC_LEFT);
-    } else if (leader_sequence_one_key(KC_BSPC)) {
-        cut_line();
-        set_last_keycode(CUT_LN);
     } else if (leader_sequence_two_keys(KC_R, KC_BSPC)) {
         delete_word_backwards();
         set_last_keycode(DEL_BWD);
@@ -540,6 +652,12 @@ void leader_end_user(void) {
     } else if (leader_sequence_two_keys(KC_C, KC_DOT)) {
         // "code ."
         SEND_STRING("code .");
+        tap_code16(KC_ENT);
+    } else if (leader_sequence_two_keys(SE_E, SE_P)){
+        // exit Python PDB
+        SEND_STRING("import os");
+        tap_code16(KC_ENT);
+        SEND_STRING("os._exit(0)");
         tap_code16(KC_ENT);
     } else if (leader_sequence_two_keys(KC_S, KC_W)) {
         // select word
@@ -556,6 +674,7 @@ void leader_end_user(void) {
     }
 
     is_leader_active = false;
+    is_leader_changed = true;
 }
 
 
@@ -571,7 +690,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // set base color on all keys
     set_layer_rgb_by_configs(&base_layer_config);
 
-    if (caps_word_enabled) {
+    if (is_caps_word_on()) {
         set_layer_rgb_by_configs(&caps_word_layer_config);
     }
 
@@ -606,14 +725,6 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
  
     return false;
-}
-
-void caps_word_set_user(bool active) {
-    if (active) {
-        caps_word_enabled = true;
-    } else {
-        caps_word_enabled = false;
-    }
 }
 
 // rgb matrix shutdown user function
@@ -665,6 +776,8 @@ bool caps_word_press_user(uint16_t keycode) {
             return false;  // Deactivate Caps Word.
     }
 }
+
+
 
 // Chorded hold behavior, overrides default to allow some one-handed chords.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
