@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "rgb_config.h"
+#include "color.h"
 
 // Function to check if current side is master (left side)
 bool is_current_side_master(void) {
@@ -28,6 +29,7 @@ static bool should_apply_config(rgb_side_t config_side) {
 
 static const uint8_t arrow_keys[] = {LED_ARROW_UP, LED_ARROW_DOWN, LED_ARROW_LEFT, LED_ARROW_RIGHT};
 static const uint8_t num_pad[] = {8, 14, 15, 16, 20, 21, 22, 26, 27, 28};
+static const uint8_t backplate[] = {0, 1, 2, 3, 4, 5};
 
 // Common key groups that could be reused across layers
 //static const uint8_t number_row[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}; // 1-0 and Esc keys (if needed)
@@ -40,31 +42,34 @@ const layer_rgb_config_t mouse_layer_config = {
     (const led_rgb_config_t[]){
         RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),      // Yellow arrow keys
         RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3, RGB_SIDE_RIGHT), // Green acceleration keys
-        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_2, RGB_SIDE_RIGHT) // Yellow layer indicator
+        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_2, RGB_SIDE_RIGHT), // Yellow layer indicator
+        RGB_CONFIG_ARRAY(43, 255, 100, backplate, 6, RGB_SIDE_BOTH), // Yellow backplate
     },
-    3 // number of configs
+    4
 };
 
 const layer_rgb_config_t nav_layer_config = {
     (const led_rgb_config_t[]){
-        RGB_CONFIG_ARRAY(4, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),       // Orange arrow keys
-        RGB_CONFIG_SINGLE(4, 255, 175, LED_LAYER_NAV, RGB_SIDE_LEFT),    // Orange layer key (single LED)
-        RGB_CONFIG_ARRAY(200, 255, 150, num_pad, 9, RGB_SIDE_RIGHT)
+        RGB_CONFIG_ARRAY(15, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),       // Orange arrow keys
+        RGB_CONFIG_SINGLE(15, 255, 175, LED_LAYER_NAV, RGB_SIDE_LEFT),    // Orange layer key (single LED)
+        RGB_CONFIG_ARRAY(175, 255, 150, num_pad, 10, RGB_SIDE_RIGHT), // Blue numpad keys
+        RGB_CONFIG_ARRAY(15, 255, 100, backplate, 6, RGB_SIDE_BOTH), // Orange backplate
     },
-    3
+    4
 };
 
 static const uint8_t alpha_keys[] = {13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29};
-static const uint8_t sym_key = 8;
+static const uint8_t sym_key = 7;
 
 static const led_rgb_config_t symbol_layer_configs[] = {
-    RGB_CONFIG_ARRAY(200, 255, 150, alpha_keys, 15, RGB_SIDE_BOTH),
-    RGB_CONFIG_SINGLE(200, 255, 150, sym_key, RGB_SIDE_RIGHT)
+    RGB_CONFIG_ARRAY(200, 255, 150, alpha_keys, 15, RGB_SIDE_BOTH), // purple symbol keys
+    RGB_CONFIG_SINGLE(200, 255, 150, sym_key, RGB_SIDE_RIGHT), // purple symbol key
+    RGB_CONFIG_ARRAY(200, 255, 100, backplate, 6, RGB_SIDE_BOTH) // purple backplate
 };
 
 const layer_rgb_config_t symbol_layer_config = {
     symbol_layer_configs,
-    2
+    3
 };
 
 // Adjust layer configuration
