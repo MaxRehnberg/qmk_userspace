@@ -108,7 +108,7 @@ enum layers {
 #define CUT LCMD(KC_X)
 #define COPY LCMD(KC_C)
 #define PASTE LCMD(KC_V)
-#define PREFIX LCTL(KC_BSPC)
+#define PREFIX LCTL(KC_SPC)
 
 #define SKP_WDL LALT(KC_LEFT) // Skip word left
 #define SKP_WDR LALT(KC_RIGHT) // Skip word right
@@ -136,8 +136,8 @@ enum custom_keycodes {
 #define MEH_LD MT(MOD_LCTL | MOD_LALT | MOD_LSFT, LEAD) // Meh or Leader
 
 const uint16_t PROGMEM arng_combo[] = {GH_RSFT, SE_O, COMBO_END}; // Å
-const uint16_t PROGMEM adia_combo[] = {GH_RSFT, SE_COMM, COMBO_END}; // Ä
-const uint16_t PROGMEM odia_combo[] = {SE_U, GH_RALT, COMBO_END}; // Ö
+const uint16_t PROGMEM adia_combo[] = {GH_RGUI, SE_Y, COMBO_END}; // Ä
+const uint16_t PROGMEM odia_combo[] = {GH_RSFT, SE_DOT, COMBO_END}; // Ö
 
 
 combo_t key_combos[] = {
@@ -183,12 +183,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |   F1   |  F2  |  F3  |  F4  |  F5  |  F6  |                              |  F7  |  F8  |  F9  |  F10 |  F11 |   F12  |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * | PREFIX |   B  |   L  |   D  |   W  |   V  |                              |   Z  |   Y  |   O  |   U  |   !  |        |
+ * | PREFIX |   B  |   L  |   D  |   W  |   V  |                              |   J  |   Y  |   O  |   U  |   !  |        |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |Hypr/Esc|   N/ |   R/ |   T/ |   C/ |   G  |                              |   K  |   H/ |   A/ |   E/ |   I/ |        |
+ * |Hypr/Esc|   N/ |   R/ |   T/ |   C/ |   G  |                              |   K  |   H/ |   A/ |   E/ |   I/ |Hypr/Esc|
  * |        | LCTL | LALT | LSHFT|  LGUI|      |                              |      | RGUI | RSFT | RALT | RCTL |        |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | LShift |   X  |   Q  |   M  |   P  |   J  | BSPC |CapsWd|  | DEL  |Leader|   "  |   F  |   ,  |   .  |   -  | RShift |
+ * | LShift |   X  |   Q  |   M  |   P  |   Z  | BSPC |CapsWd|  | DEL  |Leader|PREFIX|   F  |   ,  |   .  |   -  | RShift |
  * |        |      |      |      |      |      |      |      |  |      |/MEH  |      |      |      |      |      |        |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |Adjust| CUT  | S/   |Space/|   *  |  |   *  |Enter/| TAB/ | UNDO | REDO |
@@ -199,11 +199,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `-----------------------------------'                                              `-----------------------------------'
  */
     [L_GALLIUM] = LAYOUT_elora_hlc(
-     KC_F1   , KC_F2  , KC_F3  ,  KC_F4  , KC_F5  , KC_F6  ,                                       KC_F7  ,  KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
-     PREFIX  , SE_B   ,  SE_L  ,  SE_D   , SE_W   , SE_V   ,                                       SE_Z   ,  SE_Y   , SE_O   , SE_U   , SE_EXLM, KC_NO  ,
-     HYPR_ESC, GH_LCTL,GH_LALT,  GH_LSFT, GH_LGUI, KC_G    ,                                       SE_K   ,  GH_RGUI, GH_RSFT, GH_RALT, GH_RCTL, KC_NO  ,
-     KC_LSFT , SE_X ,  SE_Q   ,  SE_M   , SE_P   , SE_J    , KC_BSPC , CW_TOGG,   KC_DEL , MEH_LD ,SE_QUOT,  SE_F   , KC_COMM, KC_DOT , SE_MINS, KC_RSFT,
-                                 ADJUST , CUT    , MEH_S   , SPC_NAV , LARCANE,   RARCANE, ENT_SYM, TAB_MD,  UNDO   , REDO   ,
+     KC_F1   , KC_F2  , KC_F3  ,  KC_F4  , KC_F5 , KC_F6  ,                                       KC_F7  ,  KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
+     PREFIX  , SE_B   ,  SE_L  ,  SE_D   , SE_W  , SE_V   ,                                       SE_J   ,  SE_Y   , SE_O   , SE_U   , SE_EXLM, KC_NO  ,
+     HYPR_ESC, GH_LCTL,GH_LALT,  GH_LSFT, GH_LGUI, KC_G   ,                                       SE_K   ,  GH_RGUI, GH_RSFT, GH_RALT, GH_RCTL, HYPR_ESC,
+     KC_LSFT , SE_X ,  SE_Q   ,  SE_M   , SE_P   , SE_Z    , KC_BSPC , CW_TOGG,   KC_DEL , MEH_LD ,PREFIX,  SE_F   , KC_DOT , KC_COMM , SE_MINS, KC_RSFT,
+                                 ADJUST , CUT    , MEH_S  , SPC_NAV , LARCANE,   RARCANE, ENT_SYM, TAB_MD,  UNDO   , REDO   ,
      KC_MUTE, KC_NO,  KC_NO, KC_NO, KC_NO,                                                          KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
     ),
 /*
@@ -444,17 +444,17 @@ static void process_right_arcane(uint16_t keycode, uint8_t mods) { // RARCANE de
         case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
         case SE_M: { MAGIC_STRING("m",       SE_M); } break;
         case SE_P: { MAGIC_STRING("p",       SE_P); } break;
-        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
-
+        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        
         case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
         
         // right side: magic
-        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        case SE_J: { MAGIC_STRING("j",       SE_ADIA); } break;
         case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
         case SE_O: { MAGIC_STRING("f",       SE_F); } break;
         case SE_U: { MAGIC_STRING("e",       SE_E); } break;
         case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-
+        
         case SE_K: { MAGIC_STRING("y",       SE_Y); } break;
         case GH_RGUI: { MAGIC_STRING("y",    GH_RGUI); } break;
         case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
@@ -487,23 +487,23 @@ static void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE def
         case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
         case SE_M: { MAGIC_STRING("b",       SE_B); } break;
         case SE_P: { MAGIC_STRING("p",       SE_P); } break;
-        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
-
+        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        
         case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
         
         // right side: repeat
-        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
+        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
         case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
         case SE_O: { MAGIC_STRING("o",       SE_O); } break;
         case SE_U: { MAGIC_STRING("u",       SE_U); } break;
         case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-
+        
         case SE_K: { MAGIC_STRING("k",       SE_K); } break;
         case GH_RGUI: { MAGIC_STRING("h",    GH_RGUI); } break;
         case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
         case GH_RALT: { MAGIC_STRING("e",    GH_RALT); } break;
         case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
-
+        
         case SE_F: { MAGIC_STRING("f",       SE_F); } break;
 
         // default case, repeat
