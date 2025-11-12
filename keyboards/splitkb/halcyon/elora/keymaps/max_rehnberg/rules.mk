@@ -10,11 +10,10 @@ SPLIT_KEYBOARD = yes
 LEADER_ENABLE = yes
 
 
-# Add custom RGB configuration
+# Add custom source files
 SRC += rgb_config.c
-
-# Add app switcher functionality
 SRC += app_switcher.c
+SRC += arcane.c
 
 # This adds module functionality to your keyboard (files found in users/halcyon_modules)
 USER_NAME := halcyon_modules

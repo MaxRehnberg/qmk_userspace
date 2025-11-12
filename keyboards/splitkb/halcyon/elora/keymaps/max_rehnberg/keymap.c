@@ -1,38 +1,18 @@
 // Copyright 2024 splitkb.com (support@splitkb.com)
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include QMK_KEYBOARD_H
 #include <math.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include "_wait.h"
-#include "action.h"
-#include "action_layer.h"
-#include "action_util.h"
-#include "caps_word.h"
-#include "color.h"
-#include "community_modules.h"
-#include "info_config.h"
-#include "keyboard.h"
-#include "keycodes.h"
 #include "keymap_swedish.h"
-#include "process_combo.h"
 #include "sendstring_swedish.h"
-#include "keymap_us.h"
-#include "modifiers.h"
-#include "quantum.h"
-#include "quantum_keycodes.h"
-#include "repeat_key.h"
-#include "rgb_matrix.h"
 #include "rgb_config.h"
 #include "app_switcher.h"
+#include "arcane.h"
 #include "leader.h"
 #include "select_word.h"
-#include "transactions.h"
-#include QMK_KEYBOARD_H
 
-bool is_leader_active = false;
-bool is_leader_changed = false;
+static bool is_leader_active = false;
+static bool is_leader_changed = false;
 
 enum layers {
     L_GALLIUM =0,
@@ -403,115 +383,6 @@ bool remember_last_key_user(uint16_t keycode, keyrecord_t* record,
     return true;  // Other keys can be repeated.
 }
 
-// An enhanced version of SEND_STRING: if Caps Word is active, the Shift key is
-// held while sending the string. Additionally, the last key is set such that if
-// the Repeat Key is pressed next, it produces `repeat_keycode`.
-#define MAGIC_STRING(str, repeat_keycode) \
-        magic_send_string_P(PSTR(str), (repeat_keycode))
- 
-static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
-    uint8_t saved_mods = 0;
- 
-  if (is_caps_word_on()) { // If Caps Word is on, save the mods and hold Shift.
-    saved_mods = get_mods();
-    register_mods(MOD_BIT(KC_LSFT));
-  }
- 
-  send_string_with_delay_P(str, TAP_CODE_DELAY);  // Send the string.
-  set_last_keycode(repeat_keycode); // 2024-03-09 Disabled sending of string for mag-rep / rep-mag consistency.
- 
-  // If Caps Word is on, restore the mods.
-  if (is_caps_word_on()) {
-    set_mods(saved_mods);
-  }
-}
-static void process_right_arcane(uint16_t keycode, uint8_t mods) { // RARCANE definitions
-    switch (keycode) {
-        // left side: repeat
-        case SE_B: { MAGIC_STRING("b",       SE_B); } break;
-        case SE_L: { MAGIC_STRING("l",       SE_L); } break;
-        case SE_D: { MAGIC_STRING("d",       SE_D); } break;
-        case SE_W: { MAGIC_STRING("w",       SE_W); } break;
-        case SE_V: { MAGIC_STRING("v",       SE_V); } break;
-
-        case GH_LCTL: { MAGIC_STRING("n",    GH_LCTL); } break;
-        case GH_LALT: { MAGIC_STRING("r",    GH_LALT); } break;
-        case GH_LSFT: { MAGIC_STRING("t",    GH_LSFT); } break;
-        case GH_LGUI: { MAGIC_STRING("c",    GH_LGUI); } break;
-        case SE_G: { MAGIC_STRING("g",       SE_G); } break;
-
-        case SE_X: { MAGIC_STRING("x",       SE_X); } break;
-        case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
-        case SE_M: { MAGIC_STRING("m",       SE_M); } break;
-        case SE_P: { MAGIC_STRING("p",       SE_P); } break;
-        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
-        
-        case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
-        
-        // right side: magic
-        case SE_J: { MAGIC_STRING("j",       SE_ADIA); } break;
-        case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
-        case SE_O: { MAGIC_STRING("f",       SE_F); } break;
-        case SE_U: { MAGIC_STRING("e",       SE_E); } break;
-        case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-        
-        case SE_K: { MAGIC_STRING("y",       SE_Y); } break;
-        case GH_RGUI: { MAGIC_STRING("y",    GH_RGUI); } break;
-        case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
-        case GH_RALT: { MAGIC_STRING("u",    GH_RALT); } break;
-        case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
-
-        case SE_F: { MAGIC_STRING("o",       SE_O); } break;
-
-        // default case, repeat
-        default: tap_code16(keycode);
-        
-    }
-}
-static void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE definitions
-    switch (keycode) {
-        // left side: magic
-        case SE_B: { MAGIC_STRING("j",       SE_J); } break;
-        case SE_L: { MAGIC_STRING("r",       GH_LALT); } break;
-        case SE_D: { MAGIC_STRING("m",       SE_B); } break;
-        case SE_W: { MAGIC_STRING("w",       SE_W); } break;
-        case SE_V: { MAGIC_STRING("v",       SE_V); } break;
-
-        case GH_LCTL: { MAGIC_STRING("n",    GH_LCTL); } break;
-        case GH_LALT: { MAGIC_STRING("l",    SE_L); } break;
-        case GH_LSFT: { MAGIC_STRING("m",    SE_M); } break;
-        case GH_LGUI: { MAGIC_STRING("c",    GH_LGUI); } break;
-        case SE_G: { MAGIC_STRING("n",       SE_N); } break;
-
-        case SE_X: { MAGIC_STRING("x",       SE_X); } break;
-        case SE_Q: { MAGIC_STRING("q",       SE_Q); } break;
-        case SE_M: { MAGIC_STRING("b",       SE_B); } break;
-        case SE_P: { MAGIC_STRING("p",       SE_P); } break;
-        case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
-        
-        case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
-        
-        // right side: repeat
-        case SE_J: { MAGIC_STRING("j",       SE_J); } break;
-        case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
-        case SE_O: { MAGIC_STRING("o",       SE_O); } break;
-        case SE_U: { MAGIC_STRING("u",       SE_U); } break;
-        case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-        
-        case SE_K: { MAGIC_STRING("k",       SE_K); } break;
-        case GH_RGUI: { MAGIC_STRING("h",    GH_RGUI); } break;
-        case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
-        case GH_RALT: { MAGIC_STRING("e",    GH_RALT); } break;
-        case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
-        
-        case SE_F: { MAGIC_STRING("f",       SE_F); } break;
-
-        // default case, repeat
-        default: tap_code16(keycode);
-        
-    }
-}
-
 
 void double_tap(uint16_t keycode) {
     tap_code16(keycode);
@@ -539,17 +410,23 @@ void delete_word_forwards(void) {
 
 // Combo key handling
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // Handle Arcane keys
-     if (record->event.pressed) {
-        switch (keycode) {
-            case LARCANE: { process_left_arcane(get_last_keycode(), get_last_mods()); } return false;
-            case RARCANE: { process_right_arcane(get_last_keycode(), get_last_mods()); } return false;
-        }
+    // Call select_word module's process_record to track selection state
+    if (!process_record_select_word(keycode, record)) {
+        return false;
     }
     
-    // Handle knob
-     if (record->event.pressed) {
-        switch (keycode){
+    // Handle key press events
+    if (record->event.pressed) {
+        switch (keycode) {
+            // Arcane keys
+            case LARCANE:
+                process_left_arcane(get_last_keycode(), get_last_mods());
+                return false;
+            case RARCANE:
+                process_right_arcane(get_last_keycode(), get_last_mods());
+                return false;
+            
+            // App switcher controls
             case APP_CW:
                 app_switch(KC_LEFT);
                 return false;
@@ -558,6 +435,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             case APP_KNB:
                 end_app_switcher_with_selection();
+                return false;
+            
+            // Delete word actions
+            case DEL_BWD:
+                delete_word_backwards();
+                return false;
+            case DEL_FWD:
+                delete_word_forwards();
+                return false;
+            
+            // Mouse double click
+            case MS_DBL:
+                double_tap(MS_BTN1);
                 return false;
         }
     }
@@ -570,33 +460,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-        case DEL_BWD:
-            if (record->event.pressed) {
-                delete_word_backwards();
-            }
-            return false;
-        case DEL_FWD:
-            if (record->event.pressed) {
-                delete_word_forwards();
-            }
-            return false;
         case SFTLLCK:
-            if (record->tap.count) {
-                if (record->event.pressed) {
-                    // Toggle the lock on the highest layer.
-                    layer_lock_invert(get_highest_layer(layer_state));
-                }
+            if (record->tap.count && record->event.pressed) {
+                // Toggle the lock on the highest layer.
+                layer_lock_invert(get_highest_layer(layer_state));
                 return false;
             }
             break;
-        case MS_DBL:
-            if (record->event.pressed) {
-                double_tap(MS_BTN1);
-            }
-            return false;
-        default:
-            break;
     }
+    
     return true;
 }
 
@@ -698,30 +570,21 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         set_layer_rgb_by_configs(&leader_layer_config);
     }
 
-    // set color on all active layers (from lowest to highest priority)
-    layer_state_t active_layers = layer_state | default_layer_state;
-    
-    // Check each layer in order (higher layers will override lower ones)
-    for (uint8_t layer = 0; layer < MAX_LAYER; layer++) {
-        if (IS_LAYER_ON_STATE(active_layers, layer)) {
-            switch (layer) {
-                case L_NAV: 
-                    set_layer_rgb_by_configs(&nav_layer_config);
-                    break;
-                case L_MS:
-                    set_layer_rgb_by_configs(&mouse_layer_config);
-                    break;
-                case L_SYM:
-                    set_layer_rgb_by_configs(&symbol_layer_config);
-                    break;
-                case L_ADJUST:
-                    set_layer_rgb_by_configs(&adjust_layer_config);
-                    break;
-                default:
-                    // Do nothing for other layers
-                    break;
-            }
-        }
+    // Apply RGB for the highest active layer
+    uint8_t layer = get_highest_layer(layer_state);
+    switch (layer) {
+        case L_NAV: 
+            set_layer_rgb_by_configs(&nav_layer_config);
+            break;
+        case L_MS:
+            set_layer_rgb_by_configs(&mouse_layer_config);
+            break;
+        case L_SYM:
+            set_layer_rgb_by_configs(&symbol_layer_config);
+            break;
+        case L_ADJUST:
+            set_layer_rgb_by_configs(&adjust_layer_config);
+            break;
     }
  
     return false;

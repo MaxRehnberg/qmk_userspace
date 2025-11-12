@@ -123,6 +123,10 @@ void set_hsv_by_key_indices(const uint8_t *indices, uint8_t array_size, hsv_t hs
 
 // Generic function to apply multiple RGB configs to a layer
 void set_layer_rgb_by_configs(const layer_rgb_config_t* config) {
+    if (config == NULL || config->configs == NULL) {
+        return;
+    }
+    
     for (uint8_t i = 0; i < config->config_count; i++) {
         const led_rgb_config_t* current_config = &config->configs[i];
         
