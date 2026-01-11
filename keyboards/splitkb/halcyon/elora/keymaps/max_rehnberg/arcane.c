@@ -76,20 +76,6 @@ void process_right_arcane(uint16_t keycode, uint8_t mods) { // RARCANE definitio
 
         case SE_F: { MAGIC_STRING("o",       SE_O); } break;
 
-        // Select word keycodes
-        case SELWORD:
-            select_word_tap('W');
-            set_last_keycode(SELWORD);
-            break;
-        case SELWBAK:
-            select_word_tap('B');
-            set_last_keycode(SELWBAK);
-            break;
-        case SELLINE:
-            select_word_tap('L');
-            set_last_keycode(SELLINE);
-            break;
-
         // default case, repeat
         default:
             tap_code16(keycode);
@@ -134,21 +120,6 @@ void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE definition
         case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
         
         case SE_F: { MAGIC_STRING("f",       SE_F); } break;
-
-        // Select word keycodes
-        case SELWORD:
-            select_word_tap('W');
-            set_last_keycode(SELWORD);
-            break;
-        case SELWBAK:
-            select_word_tap('B');
-            set_last_keycode(SELWBAK);
-            break;
-        case SELLINE:
-            select_word_tap('L');
-            set_last_keycode(SELLINE);
-            break;
-
         // default case, repeat
         default:
             tap_code16(keycode);
