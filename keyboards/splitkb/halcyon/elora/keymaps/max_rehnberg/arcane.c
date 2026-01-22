@@ -9,18 +9,18 @@
 // the Repeat Key is pressed next, it produces `repeat_keycode`.
 #define MAGIC_STRING(str, repeat_keycode) \
         magic_send_string_P(PSTR(str), (repeat_keycode))
- 
+
 static void magic_send_string_P(const char* str, uint16_t repeat_keycode) {
     uint8_t saved_mods = 0;
- 
+
     if (is_caps_word_on()) { // If Caps Word is on, save the mods and hold Shift.
         saved_mods = get_mods();
         register_mods(MOD_BIT(KC_LSFT));
     }
- 
+
     send_string_with_delay_P(str, TAP_CODE_DELAY);  // Send the string.
     set_last_keycode(repeat_keycode);
- 
+
     // If Caps Word is on, restore the mods.
     if (is_caps_word_on()) {
         set_mods(saved_mods);
@@ -58,16 +58,16 @@ void process_right_arcane(uint16_t keycode, uint8_t mods) { // RARCANE definitio
         case SE_M: { MAGIC_STRING("m",       SE_M); } break;
         case SE_P: { MAGIC_STRING("p",       SE_P); } break;
         case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
-        
+
         case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
-        
+
         // right side: magic
         case SE_J: { MAGIC_STRING("j",       SE_ADIA); } break;
         case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
         case SE_O: { MAGIC_STRING("f",       SE_F); } break;
         case SE_U: { MAGIC_STRING("e",       SE_E); } break;
         case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-        
+
         case SE_K: { MAGIC_STRING("y",       SE_Y); } break;
         case GH_RGUI: { MAGIC_STRING("y",    GH_RGUI); } break;
         case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
@@ -89,7 +89,7 @@ void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE definition
         case SE_B: { MAGIC_STRING("j",       SE_J); } break;
         case SE_L: { MAGIC_STRING("r",       GH_LALT); } break;
         case SE_D: { MAGIC_STRING("m",       SE_B); } break;
-        case SE_W: { MAGIC_STRING("w",       SE_W); } break;
+        case SE_W: { MAGIC_STRING("q",       SE_Q); } break;
         case SE_V: { MAGIC_STRING("v",       SE_V); } break;
 
         case GH_LCTL: { MAGIC_STRING("n",    GH_LCTL); } break;
@@ -103,22 +103,22 @@ void process_left_arcane(uint16_t keycode, uint8_t mods) { // LARCANE definition
         case SE_M: { MAGIC_STRING("b",       SE_B); } break;
         case SE_P: { MAGIC_STRING("p",       SE_P); } break;
         case SE_Z: { MAGIC_STRING("z",       SE_Z); } break;
-        
+
         case MEH_S: { MAGIC_STRING("s",       MEH_S); } break;
-        
+
         // right side: repeat
         case SE_J: { MAGIC_STRING("j",       SE_J); } break;
         case SE_Y: { MAGIC_STRING("y",       SE_Y); } break;
         case SE_O: { MAGIC_STRING("o",       SE_O); } break;
         case SE_U: { MAGIC_STRING("u",       SE_U); } break;
         case SE_EXLM: { MAGIC_STRING("!",    SE_EXLM); } break;
-        
+
         case SE_K: { MAGIC_STRING("k",       SE_K); } break;
         case GH_RGUI: { MAGIC_STRING("h",    GH_RGUI); } break;
         case GH_RSFT: { MAGIC_STRING("a",    GH_RSFT); } break;
         case GH_RALT: { MAGIC_STRING("e",    GH_RALT); } break;
         case GH_RCTL: { MAGIC_STRING("i",    GH_RCTL); } break;
-        
+
         case SE_F: { MAGIC_STRING("f",       SE_F); } break;
         // default case, repeat
         default:
