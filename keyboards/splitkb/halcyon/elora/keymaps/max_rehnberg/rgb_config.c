@@ -4,15 +4,10 @@
 #include "rgb_config.h"
 #include "color.h"
 
-// Function to check if current side is master (left side)
-bool is_current_side_master(void) {
-    return is_keyboard_master();
-}
-
 // Helper function to check if a config should be applied to current side
 static bool should_apply_config(rgb_side_t config_side) {
-    bool is_master = is_current_side_master();
-    
+    bool is_master = is_keyboard_left();
+
     switch (config_side) {
         case RGB_SIDE_BOTH:
             return true;
@@ -28,90 +23,72 @@ static bool should_apply_config(rgb_side_t config_side) {
 // Shared LED Groups
 
 static const uint8_t arrow_keys[] = {LED_ARROW_UP, LED_ARROW_DOWN, LED_ARROW_LEFT, LED_ARROW_RIGHT};
-static const uint8_t num_pad[] = {8, 14, 15, 16, 20, 21, 22, 26, 27, 28};
-static const uint8_t backplate[] = {0, 1, 2, 3, 4, 5};
-
-// Common key groups that could be reused across layers
-//static const uint8_t number_row[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}; // 1-0 and Esc keys (if needed)
-
+static const uint8_t num_pad[]    = {8, 14, 15, 16, 20, 21, 22, 26, 27, 28};
+static const uint8_t backplate[]  = {0, 1, 2, 3, 4, 5};
 
 // Layer Configurations
 static const uint8_t mouse_accel_keys[] = {20, 21, 22};
 
-const layer_rgb_config_t mouse_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),      // Yellow arrow keys
-        RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3, RGB_SIDE_RIGHT), // Green acceleration keys
-        RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_2, RGB_SIDE_RIGHT), // Yellow layer indicator
-        RGB_CONFIG_ARRAY(43, 255, 100, backplate, 6, RGB_SIDE_BOTH), // Yellow backplate
-    },
-    4
-};
+const layer_rgb_config_t num_layer_config   = {(const led_rgb_config_t[]){RGB_CONFIG_ARRAY(85, 255, 100, num_pad, 10, RGB_SIDE_RIGHT), // Green numpad keys
+                                                                          RGB_CONFIG_SINGLE(85, 255, 100, 7, RGB_SIDE_LEFT)},
+                                               2};
+const layer_rgb_config_t mouse_layer_config = {(const led_rgb_config_t[]){
+                                                   RGB_CONFIG_ARRAY(43, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),        // Yellow arrow keys
+                                                   RGB_CONFIG_ARRAY(85, 255, 175, mouse_accel_keys, 3, RGB_SIDE_RIGHT), // Green acceleration keys
+                                                   RGB_CONFIG_SINGLE(43, 255, 175, LED_THUMB_KEY_3, RGB_SIDE_RIGHT),    // Yellow layer indicator
+                                                   RGB_CONFIG_ARRAY(43, 255, 100, backplate, 6, RGB_SIDE_BOTH),         // Yellow backplate
+                                               },
+                                               4};
 
-const layer_rgb_config_t nav_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_ARRAY(15, 255, 175, arrow_keys, 4, RGB_SIDE_LEFT),       // Orange arrow keys
-        RGB_CONFIG_SINGLE(15, 255, 175, LED_LAYER_NAV, RGB_SIDE_LEFT),    // Orange layer key (single LED)
-        RGB_CONFIG_ARRAY(175, 255, 150, num_pad, 10, RGB_SIDE_RIGHT), // Blue numpad keys
-        RGB_CONFIG_ARRAY(15, 255, 100, backplate, 6, RGB_SIDE_BOTH), // Orange backplate
-    },
-    4
-};
+const layer_rgb_config_t nav_layer_config = {(const led_rgb_config_t[]){
+                                                 RGB_CONFIG_ARRAY(15, 255, 150, arrow_keys, 4, RGB_SIDE_LEFT),   // Orange arrow keys
+                                                 RGB_CONFIG_SINGLE(15, 255, 150, LED_LAYER_NAV, RGB_SIDE_RIGHT), // Orange layer key (single LED)
+                                                 RGB_CONFIG_ARRAY(15, 255, 100, backplate, 6, RGB_SIDE_BOTH),    // Orange backplate
+                                             },
+                                             3};
 
 static const uint8_t alpha_keys[] = {13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29};
-static const uint8_t sym_key = 7;
+static const uint8_t sym_key      = 7;
 
 static const led_rgb_config_t symbol_layer_configs[] = {
     RGB_CONFIG_ARRAY(200, 255, 150, alpha_keys, 15, RGB_SIDE_BOTH), // purple symbol keys
-    RGB_CONFIG_SINGLE(200, 255, 150, sym_key, RGB_SIDE_RIGHT), // purple symbol key
-    RGB_CONFIG_ARRAY(200, 255, 100, backplate, 6, RGB_SIDE_BOTH) // purple backplate
+    RGB_CONFIG_SINGLE(200, 255, 150, sym_key, RGB_SIDE_RIGHT),      // purple symbol key
+    RGB_CONFIG_ARRAY(200, 255, 100, backplate, 6, RGB_SIDE_BOTH)    // purple backplate
 };
 
-const layer_rgb_config_t symbol_layer_config = {
-    symbol_layer_configs,
-    3
-};
+const layer_rgb_config_t symbol_layer_config = {symbol_layer_configs, 3};
 
 // Adjust layer configuration
-static const uint8_t base_layer_keys[] = {15 , 21, 27};
-const layer_rgb_config_t adjust_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_ADJUST, RGB_SIDE_LEFT),       // Red adjust key
-        RGB_CONFIG_ARRAY(85, 255, 175, base_layer_keys, 3, RGB_SIDE_LEFT)    // Green base layers
-    },
-    2
-};
+static const uint8_t     base_layer_keys[]   = {15, 21, 27};
+const layer_rgb_config_t adjust_layer_config = {(const led_rgb_config_t[]){
+                                                    RGB_CONFIG_SINGLE(0, 255, 100, LED_ADJUST, RGB_SIDE_LEFT),        // Red adjust key
+                                                    RGB_CONFIG_ARRAY(85, 255, 175, base_layer_keys, 3, RGB_SIDE_LEFT) // Green base layers
+                                                },
+                                                2};
 
-const layer_rgb_config_t caps_word_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_CAPS_WORD, RGB_SIDE_LEFT),   // Red caps word key
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_CW_UNDERGLOW, RGB_SIDE_LEFT) // Red underglow LED
-    },
-    2
-};
+const layer_rgb_config_t caps_word_layer_config = {(const led_rgb_config_t[]){
+                                                       RGB_CONFIG_SINGLE(20, 255, 100, LED_CAPS_WORD, RGB_SIDE_LEFT),   // Red caps word key
+                                                       RGB_CONFIG_SINGLE(20, 255, 100, LED_CW_UNDERGLOW, RGB_SIDE_LEFT) // Red underglow LED
+                                                   },
+                                                   2};
 
-const layer_rgb_config_t leader_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_LEADER, RGB_SIDE_RIGHT),
-        RGB_CONFIG_SINGLE(0, 255, 100, LED_LEADER_UNDERGLOW, RGB_SIDE_RIGHT)
-    },
-    2
-};
+const layer_rgb_config_t oneshot_shift_layer_config = {(const led_rgb_config_t[]){RGB_CONFIG_SINGLE(20, 255, 100, LED_ONESHOT_SHIFT_UNDERGLOW, RGB_SIDE_BOTH), // Red underglow for oneshot shift
+                                                                                  RGB_CONFIG_SINGLE(20, 255, 50, 11, RGB_SIDE_BOTH)},
+                                                       2};
+
+const layer_rgb_config_t leader_layer_config = {(const led_rgb_config_t[]){RGB_CONFIG_SINGLE(20, 255, 100, LED_LEADER, RGB_SIDE_RIGHT), RGB_CONFIG_SINGLE(20, 255, 50, LED_LEADER_UNDERGLOW, RGB_SIDE_RIGHT)}, 2};
+
+const layer_rgb_config_t sentence_case_layer_config = {(const led_rgb_config_t[]){RGB_CONFIG_SINGLE(20, 255, 100, LED_ADJUST, RGB_SIDE_RIGHT), RGB_CONFIG_SINGLE(20, 255, 50, LED_CW_UNDERGLOW, RGB_SIDE_RIGHT)}, 2};
+
+const layer_rgb_config_t sentence_case_primed_layer_config = {(const led_rgb_config_t[]){RGB_CONFIG_SINGLE(20, 255, 150, LED_ADJUST, RGB_SIDE_RIGHT), RGB_CONFIG_SINGLE(20, 255, 100, LED_CW_UNDERGLOW, RGB_SIDE_RIGHT)}, 2};
 
 // Single-config layers for special scenarios
-const layer_rgb_config_t base_layer_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_ALL(0, 0, 100)        // Low white for base layer
-    },
-    1
-};
+const layer_rgb_config_t base_layer_config = {(const led_rgb_config_t[]){
+                                                  RGB_CONFIG_ALL(0, 0, 100) // Low white for base layer
+                                              },
+                                              1};
 
-const layer_rgb_config_t bootloader_config = {
-    (const led_rgb_config_t[]){
-        RGB_CONFIG_ALL(0, 255, 100)
-    },
-    1
-};
+const layer_rgb_config_t bootloader_config = {(const led_rgb_config_t[]){RGB_CONFIG_ALL(0, 255, 100)}, 1};
 
 // RGB utility functions
 void set_hsv_by_key_indices(const uint8_t *indices, uint8_t array_size, hsv_t hsv) {
@@ -122,25 +99,25 @@ void set_hsv_by_key_indices(const uint8_t *indices, uint8_t array_size, hsv_t hs
 }
 
 // Generic function to apply multiple RGB configs to a layer
-void set_layer_rgb_by_configs(const layer_rgb_config_t* config) {
+void set_layer_rgb_by_configs(const layer_rgb_config_t *config) {
     if (config == NULL || config->configs == NULL) {
         return;
     }
-    
+
     for (uint8_t i = 0; i < config->config_count; i++) {
-        const led_rgb_config_t* current_config = &config->configs[i];
-        
+        const led_rgb_config_t *current_config = &config->configs[i];
+
         // For RGB_TYPE_ARRAY and RGB_TYPE_SINGLE, check the side field. For RGB_TYPE_ALL, assume RGB_SIDE_BOTH
         rgb_side_t config_side = (current_config->type == RGB_TYPE_ALL) ? RGB_SIDE_BOTH : current_config->side;
-        
+
         // Check if this config should be applied to the current side
         if (!should_apply_config(config_side)) {
             continue;
         }
-        
-        hsv_t hsv = {current_config->hue, current_config->saturation, current_config->value};
+
+        hsv_t hsv   = {current_config->hue, current_config->saturation, current_config->value};
         rgb_t color = hsv_to_rgb(hsv);
-        
+
         switch (current_config->type) {
             case RGB_TYPE_SINGLE:
                 // Handle single LED
