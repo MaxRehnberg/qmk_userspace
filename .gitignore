@@ -14,3 +14,11 @@
 compile_commands.json
 .clangd/
 .cache/
+
+# Local host HID config/state
+.config/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc

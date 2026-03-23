@@ -12,5 +12,18 @@ ifeq ($(QMK_FIRMWARE_ROOT),)
     $(error Cannot determine qmk_firmware location. `qmk config -ro user.qmk_home` is not set)
 endif
 
+.PHONY: elora elora-left elora-right ploopy
+
+elora: elora-left elora-right
+
+elora-left:
+	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_NONE=1 -e TARGET=elora_left
+
+elora-right:
+	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_ENCODER=1 -e RGB_MATRIX_SPLIT_RIGHT=yes -e TARGET=elora_right
+
+ploopy:
+	qmk compile -kb ploopyco/nano_2/rev2_003 -km max_rehnberg
+
 %:
 	+$(MAKE) -C $(QMK_FIRMWARE_ROOT) $(MAKECMDGOALS) QMK_USERSPACE=$(QMK_USERSPACE)

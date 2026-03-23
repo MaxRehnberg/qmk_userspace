@@ -14,9 +14,10 @@
             "max_rehnberg",
             {
                 "HLC_ENCODER": "1",
-                "TARGET": "elora_right",
-                "RGB_MATRIX_SPLIT_RIGHT": "yes"
+                "RGB_MATRIX_SPLIT_RIGHT": "yes",
+                "TARGET": "elora_right"
             }
-        ]
+        ],
+        ["ploopyco/nano_2/rev2_003", "max_rehnberg"]
     ]
 }

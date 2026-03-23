@@ -15,6 +15,7 @@
 #include "transactions.h"
 #include "xcase.h"
 #include "split_util.h"
+#include "ploopy.h"
 #include <string.h>
 
 static bool    is_leader_active            = false;
@@ -67,11 +68,11 @@ enum custom_keycodes { MS_DBL = SAFE_RANGE, APP_KNB, APP_CW, APP_CCW, LEAD, LARC
 const uint16_t PROGMEM arng_combo[] = {GH_RHM3, SE_O, COMBO_END};   // Å
 const uint16_t PROGMEM adia_combo[] = {GH_RHM2, SE_U, COMBO_END};   // Ä
 const uint16_t PROGMEM odia_combo[] = {GH_RHM3, SE_DOT, COMBO_END}; // Ö
+const uint16_t PROGMEM lclk_combo[] = {SE_M, SE_P, COMBO_END};
+const uint16_t PROGMEM rclk_combo[] = {SE_Q, SE_M, COMBO_END};
 
 combo_t key_combos[] = {
-    COMBO(arng_combo, SE_ARNG),
-    COMBO(adia_combo, SE_ADIA),
-    COMBO(odia_combo, SE_ODIA),
+    COMBO(arng_combo, SE_ARNG), COMBO(adia_combo, SE_ADIA), COMBO(odia_combo, SE_ODIA), COMBO(lclk_combo, MS_BTN1), COMBO(rclk_combo, MS_BTN2),
 };
 
 // clang-format off
@@ -130,7 +131,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       _______, _______, _______, _______, _______, _______,                                         _______, _______ ,_______, _______  , _______, _______,
       KC_NO  , KC_GRV ,S(KC_GRV),SE_QUOT, SE_DQUO, A(KC_7),                                         SE_QUES, SE_RPRN ,SE_RBRC, LSA(KC_9), _______, KC_NO  ,
       KC_NO  , KC_NO  , SE_ASTR ,SE_PLUS, SE_EQL , SE_UNDS,                                         SE_DLR , SE_LPRN ,SE_LBRC, LSA(KC_8), SE_TILD, KC_NO  ,
-      SFTLLCK, KC_NO  , KC_NO   , KC_NO , SE_AMPR, SE_AT  , SE_DLR , KC_NO ,     _______, _______,  SE_HASH, PERC    ,SE_CIRC, SE_SCLN  , SE_ACUT, SFTLLCK,
+      SFTLLCK, KC_NO  , KC_NO   , KC_NO , SE_AMPR, SE_AT  , SE_DLR, _______,     _______, _______,  SE_HASH, PERC    ,SE_CIRC, SE_SCLN  , SE_ACUT, SFTLLCK,
                                 _______, _______, _______, _______, _______,     _______, _______,  _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                               _______, _______, _______, _______, _______
     ),
@@ -141,12 +142,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-------------------------------------------.                              ,-------------------------------------------.
  * |   F1   |  F2  |  F3  |  F4  |  F5  |  F6  |                              |  F7  |  F8  |  F9  |  F10 |  F11 |   F12  |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        | Paste| PgUp |  ↑   | PgDn | Redo |                              |   +  |  7   |  8   |   9  |   *  |   :    |
+ * |        |      | PgUp |  ↑   | PgDn |      |                              |   +  |  7   |  8   |   9  |   *  |   :    |
  * |--------+------+------+------+------+------|                              |------+------+------+------+------+--------|
- * |        | Copy |  ←   |  ↓   | →    | Undo |                              |   =  |  4/  |  5/  |  6/  |   /  |        |
+ * |        |      |  ←   |  ↓   | →    |      |                              |   =  |  4/  |  5/  |  6/  |   /  |        |
  * |        |      |      |      |      |      |                              |      | RGUI | RSFT | RALT | LCTL |        |
  * |--------+------+------+------+------+------+-------------.  ,-------------+------+------+------+------+------+--------|
- * | Shift/ | Cut  | Home |      | End  |      |      |      |  |      |      |   -  |  1/  |  2/  |  3/  |  %/  | Shift/ |
+ * | Shift/ |      | Home |      | End  |      |      |      |  |      |      |   -  |  1/  |  2/  |  3/  |  %/  | Shift/ |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
  *                        |      |      |      |      |      |  |      |      |   0  |  <   |  >   |
@@ -158,11 +159,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
     [L_NAV] = LAYOUT_elora_hlc(
       KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5   , KC_F6  ,                                          KC_F7  , KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
-      _______, PASTE  , KC_PGUP, KC_UP  , KC_PGDN , REDO   ,                                          SE_PLUS, KC_7   , KC_8   , KC_9   , SE_ASTR, SE_COLN,
-      HYPR_ESC, COPY  , KC_LEFT, KC_DOWN, KC_RIGHT, UNDO   ,                                          SE_EQL , NV_RHM4, NV_RHM3, NV_RHM2, NV_RHM1, HYPR_ESC,
-      SFTLLCK, CUT    , KC_HOME, KC_NO  , KC_END  , _______, _______,   _______,_______,  _______,  SE_MINS, KC_1   , KC_2   , KC_3   , PERC   , SFTLLCK,
-                                _______, _______ , _______, _______, _______,   _______,  _______,  KC_0, KC_GRV , S(KC_GRV),
-     _______, _______       ,  _______, _______, _______ ,                                                            APP_KNB, _______, _______, _______, _______
+      _______, KC_NO  , KC_PGUP, KC_UP  , KC_PGDN , KC_NO  ,                                          SE_PLUS, KC_7   , KC_8   , KC_9   , SE_ASTR, SE_COLN,
+      HYPR_ESC,KC_NO  , KC_LEFT, KC_DOWN, KC_RIGHT, KC_NO  ,                                          SE_EQL , NV_RHM4, NV_RHM3, NV_RHM2, NV_RHM1, HYPR_ESC,
+      SFTLLCK, KC_NO  , KC_HOME, KC_NO  , KC_END  , _______, _______,    _______, _______,  _______,  SE_MINS, KC_1   , KC_2   , KC_3   , PERC   , SFTLLCK,
+                                 _______, _______ , _______, _______,    _______, _______,  _______,  KC_0, KC_GRV , S(KC_GRV),
+      _______, _______,  _______, _______, _______ ,                                                            APP_KNB, _______, _______, _______, _______
     ),
 
     /*
@@ -189,7 +190,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_NUM] = LAYOUT_elora_hlc(
       KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  , KC_F6  ,                                          KC_F7  , KC_F8  , KC_F9  , KC_F10 , KC_F11 , KC_F12 ,
       _______, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,                                          SE_PLUS, KC_7   , KC_8   , KC_9   , SE_ASTR, KC_NO,
-      _______, KC_HM1, KC_HM2, KC_HM3, KC_HM4, KC_NO  ,                                          SE_EQL , KC_4   , KC_5   , KC_6   , SE_SLSH, KC_NO,
+      _______, KC_HM1 , KC_HM2 , KC_HM3 , KC_HM4 , KC_NO  ,                                          SE_EQL , KC_4   , KC_5   , KC_6   , SE_SLSH, KC_NO,
       SFTLLCK, KC_NO  , KC_NO  , KC_NO  , KC_NO  , _______, _______,   _______,_______,  _______,    SE_MINS, KC_1   , KC_2   , KC_3   , PERC   , SFTLLCK,
                                 _______, _______ , _______, _______, _______,   _______, _______,    KC_0   , KC_GRV , S(KC_GRV),
      _______, _______       ,  _______, _______, _______ ,                                                            APP_KNB, _______, _______, _______, _______
@@ -479,9 +480,12 @@ void keyboard_post_init_user(void) {
     transaction_register_rpc(SENTENCE_CASE_SYNC, sentence_case_sync_handler);
     transaction_register_rpc(SENTENCE_CASE_PRIMED_SYNC, sentence_case_primed_sync_handler);
     transaction_register_rpc(LEADER_SYNC, leader_sync_handler);
+    ploopy_init(L_MS);
 }
 
 void housekeeping_task_user(void) {
+    ploopy_task();
+
     if (is_keyboard_master()) {
         static uint8_t last_sentence        = 0xFF;
         static uint8_t last_sentence_primed = 0xFF;
@@ -510,6 +514,16 @@ void housekeeping_task_user(void) {
         }
     }
 }
+
+bool led_update_user(led_t led_state) {
+    return ploopy_led_update(led_state);
+}
+
+#if defined(RAW_ENABLE)
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+    ploopy_raw_hid_receive(data, length);
+}
+#endif
 
 
 // Timeout handling
@@ -630,6 +644,11 @@ char sentence_case_press_user(uint16_t keycode, keyrecord_t* record, uint8_t mod
 
             // Space
             case KC_SPC:
+                return ' ';
+
+            // Enter should behave like space for sentence case.
+            case KC_ENT:
+            case KC_KP_ENTER:
                 return ' ';
 
             case KC_NUHS:  // SE_QUOT (')

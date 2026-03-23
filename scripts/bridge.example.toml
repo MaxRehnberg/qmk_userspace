@@ -1,0 +1,16 @@
+[ploopy]
+# Optional filters for source Nano events.
+vendor_id = 0x5043
+# product_id = 0x4CE5
+usage_page = 0xFF60
+usage = 0x61
+# path = "DevSrvsID:4312719419"
+
+[elora]
+# Optional filters for sink Elora RAW HID endpoint.
+# Set product_id/path if multiple 0x8D1D devices are connected.
+vendor_id = 0x8D1D
+usage_page = 0xFF60
+usage = 0x61
+# product_id = 0xA392
+# path = "IOService:/..."

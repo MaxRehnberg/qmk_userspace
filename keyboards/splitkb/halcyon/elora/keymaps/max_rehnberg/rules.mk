@@ -8,12 +8,14 @@ RGB_MATRIX_ENABLE = yes
 RGB_MATRIX_DRIVER = ws2812
 SPLIT_KEYBOARD = yes
 LEADER_ENABLE = yes
+RAW_ENABLE = yes
 
 
 # Add custom source files
 SRC += rgb_config.c
 SRC += app_switcher.c
 SRC += arcane.c
+SRC += ploopy.c
 
 # This adds module functionality to your keyboard (files found in users/halcyon_modules)
 USER_NAME := halcyon_modules

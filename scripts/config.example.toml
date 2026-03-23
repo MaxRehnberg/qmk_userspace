@@ -1,0 +1,11 @@
+[device]
+# Optional filters. If omitted, script matches by usage page/usage only.
+# vendor_id = 0x5043
+# product_id = 0x4257
+
+# QMK Raw HID defaults
+usage_page = 0xFF60
+usage = 0x61
+
+# Optional fixed HID path from `nano_hid.py list`
+# path = "IOService:/AppleACPIPlatformExpert/..."

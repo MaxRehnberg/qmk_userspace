@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.max.qmk-nano-hid</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{PYTHON_PATH}}</string>
+    <string>{{REPO_PATH}}/scripts/nano_hid.py</string>
+    <string>bridge</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>DYLD_FALLBACK_LIBRARY_PATH</key>
+    <string>/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>{{HOME}}/Library/Logs/qmk-nano-hid.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>{{HOME}}/Library/Logs/qmk-nano-hid.err.log</string>
+</dict>
+</plist>
