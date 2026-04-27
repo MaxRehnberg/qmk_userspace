@@ -3,7 +3,6 @@
 
 #include "keycodes.h"
 #include QMK_KEYBOARD_H
-#include <math.h>
 #include "keymap_swedish.h"
 #include "gallium_defs.h"
 #include "sendstring_swedish.h"
@@ -68,12 +67,8 @@ enum custom_keycodes { MS_DBL = SAFE_RANGE, APP_KNB, APP_CW, APP_CCW, LEAD, LARC
 const uint16_t PROGMEM arng_combo[] = {GH_RHM3, SE_O, COMBO_END};   // Å
 const uint16_t PROGMEM adia_combo[] = {GH_RHM2, SE_U, COMBO_END};   // Ä
 const uint16_t PROGMEM odia_combo[] = {GH_RHM3, SE_DOT, COMBO_END}; // Ö
-const uint16_t PROGMEM lclk_combo[] = {SE_M, SE_P, COMBO_END};
-const uint16_t PROGMEM rclk_combo[] = {SE_Q, SE_M, COMBO_END};
 
-combo_t key_combos[] = {
-    COMBO(arng_combo, SE_ARNG), COMBO(adia_combo, SE_ADIA), COMBO(odia_combo, SE_ODIA), COMBO(lclk_combo, MS_BTN1), COMBO(rclk_combo, MS_BTN2),
-};
+combo_t key_combos[] = {COMBO(arng_combo, SE_ARNG), COMBO(adia_combo, SE_ADIA), COMBO(odia_combo, SE_ODIA)};
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -166,7 +161,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       _______, _______,  _______, _______, _______ ,                                                            APP_KNB, _______, _______, _______, _______
     ),
 
-    /*
+ /*
  * Nav Layer: Numpad
  *
  * ,-------------------------------------------.                              ,-------------------------------------------.
@@ -180,7 +175,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * | Shift/ |      |      |      |      |      |      |      |  |      |      |   -  |  1/  |  2/  |  3/  |  %/  | Shift/ |
  * | lock   |      |      |      |      |      |      |      |  |      |      |      |      |      |      |      | lock   |
  * `----------------------+------+------+------+------+------|  |------+------+------+------+------+----------------------'
- *                        |      |      |      |      |      |  |      |   0  |      |  <   |  >   |
+ *                        |      |      |      |      |      |  |      |      |   0  |  <   |  >   |
  *                        |      |      |      |      |      |  |      |      |      |      |      |
  *                        `----------------------------------'  `----------------------------------'
  * ,-----------------------------------.                                              ,-----------------------------------.
@@ -219,8 +214,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_MS] = LAYOUT_elora_hlc(
       KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   ,                                          _______, _______, _______, _______, _______, _______,
       KC_NO  , KC_NO  , MS_WHLU, MS_UP  , MS_WHLD, KC_NO   ,                                          _______, KC_NO  , KC_NO  , KC_NO  , _______, _______,
-      KC_NO  , MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT,  MS_WHLR,                                          _______, MS_ACL0, MS_ACL1, MS_ACL2, _______, _______,
-      SFTLLCK, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   , QK_LOCK, _______,      _______, _______, _______, KC_NO  , KC_NO  , KC_NO  , _______, SFTLLCK,
+      _______, MS_WHLL, MS_LEFT, MS_DOWN, MS_RGHT, MS_WHLR ,                                          _______, MS_ACL0, MS_ACL1, MS_ACL2, _______, _______,
+      SFTLLCK, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO   , _______, _______,      _______, _______, _______, KC_NO  , KC_NO  , KC_NO  , _______, SFTLLCK,
                                  _______, MS_BTN3, MS_DBL  , MS_BTN1, MS_BTN2,      _______, _______, _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                            _______, _______, _______, _______, _______
     ),
@@ -284,12 +279,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [L_GALLIUM] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU),  ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(CW_WIN, CCW_WIN), ENCODER_CCW_CW(APP_CW, APP_CCW)  },
-    [L_SYM] = {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
-    [L_NAV] = {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(CW_WIN, CCW_WIN)  },
-    [L_NUM] = {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(CW_WIN, CCW_WIN)  },
-    [L_MS] = {      ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(MS_WHLU, MS_WHLD), ENCODER_CCW_CW(_______, _______)  },
-    [L_ADJUST] = {  ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  }
+    [L_GALLIUM] =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(APP_CW , APP_CCW), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
+    [L_SYM]     =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(CW_WIN , CCW_WIN), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
+    [L_NAV]     =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
+    [L_NUM]     =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(CW_WIN , CCW_WIN), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
+    [L_MS]      =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(CW_WIN , CCW_WIN), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  },
+    [L_ADJUST]  =  {     ENCODER_CCW_CW(_______, _______),  ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______)  }
 };
 #endif
 
@@ -322,6 +317,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Handle key press events
     if (record->event.pressed) {
         switch (keycode) {
+            // While the app switcher is active, tap A as Q because Q shares the
+            // encoder hand and is awkward to reach while rotating/selecting apps.
+            case GH_RHM3:
+                if (app_switcher_active && record->tap.count) {
+                    tap_code16(SE_Q);
+                    return false;
+                }
+                break;
+
             // Arcane keys
             case LARCANE:
                 process_left_arcane(get_last_keycode(), get_last_mods());
@@ -535,6 +539,14 @@ void matrix_scan_user(void) {
 
 // RGB Profiles - Functions moved to rgb_config.c
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    static const layer_rgb_config_t *const active_layer_rgb_configs[] = {
+        [L_SYM]    = &symbol_layer_config,
+        [L_NUM]    = &num_layer_config,
+        [L_MS]     = &mouse_layer_config,
+        [L_NAV]    = &nav_layer_config,
+        [L_ADJUST] = &adjust_layer_config,
+    };
+
     // set base color on all keys
     set_layer_rgb_by_configs(&base_layer_config);
 
@@ -547,23 +559,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 
     // Apply RGB for the highest active layer
-    uint8_t layer = get_highest_layer(layer_state);
-    switch (layer) {
-        case L_NUM:
-            set_layer_rgb_by_configs(&num_layer_config);
-            break;
-        case L_NAV:
-            set_layer_rgb_by_configs(&nav_layer_config);
-            break;
-        case L_MS:
-            set_layer_rgb_by_configs(&mouse_layer_config);
-            break;
-        case L_SYM:
-            set_layer_rgb_by_configs(&symbol_layer_config);
-            break;
-        case L_ADJUST:
-            set_layer_rgb_by_configs(&adjust_layer_config);
-            break;
+    const uint8_t layer = get_highest_layer(layer_state);
+    if (layer < ARRAY_SIZE(active_layer_rgb_configs) && active_layer_rgb_configs[layer] != NULL) {
+        set_layer_rgb_by_configs(active_layer_rgb_configs[layer]);
     }
 
     if ((get_oneshot_mods() | get_oneshot_locked_mods()) & MOD_MASK_SHIFT) {

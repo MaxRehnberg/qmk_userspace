@@ -5,7 +5,7 @@
             "splitkb/halcyon/elora/rev2",
             "max_rehnberg",
             {
-                "HLC_NONE": "1",
+                "HLC_ENCODER": "1",
                 "TARGET": "elora_left"
             }
         ],
@@ -13,8 +13,7 @@
             "splitkb/halcyon/elora/rev2",
             "max_rehnberg",
             {
-                "HLC_ENCODER": "1",
-                "RGB_MATRIX_SPLIT_RIGHT": "yes",
+                "HLC_NONE": "1",
                 "TARGET": "elora_right"
             }
         ],

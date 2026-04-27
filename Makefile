@@ -17,10 +17,10 @@ endif
 elora: elora-left elora-right
 
 elora-left:
-	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_NONE=1 -e TARGET=elora_left
+	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_ENCODER=1 -e TARGET=elora_left
 
 elora-right:
-	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_ENCODER=1 -e RGB_MATRIX_SPLIT_RIGHT=yes -e TARGET=elora_right
+	qmk compile -kb splitkb/halcyon/elora/rev2 -km max_rehnberg -e HLC_NONE=1 -e TARGET=elora_right
 
 ploopy:
 	qmk compile -kb ploopyco/nano_2/rev2_003 -km max_rehnberg
