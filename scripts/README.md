@@ -1,113 +1,111 @@
-# Ploopy Nano Host Integration
+# Ploopy Nano host integration
 
-This directory is organized by host-specific behavior:
+Makes the standalone Ploopy Nano wake the Elora mouse layer on macOS.
 
-- `nano_hid.py`: cross-platform helper used for the macOS Raw HID path
-- `macos/`: LaunchAgent template and installer
-- `linux/`: notes for native LED path (no script required)
-- `bridge.example.toml`: optional config for Nano->Elora bridge mode
+The Nano is a separate trackball, so the Elora does not automatically know when
+it moves. `nano_hid.py bridge` listens for Nano movement over QMK Raw HID and
+forwards a small activity packet to the Elora. The Elora then enables its mouse
+layer briefly.
 
-Windows is intentionally script-free; the Nano uses Scroll Lock LED beacon/command decoding there.
+## How it works
 
-## Recommended setup (uv + venv)
+- Nano emits Raw HID `move-start` events.
+- The bridge script listens to the Nano.
+- The bridge forwards activity packets to the Elora.
+- A macOS LaunchAgent keeps the bridge running in the background.
+
+Devices are discovered through QMK Raw HID:
+
+- usage page: `0xFF60`
+- usage: `0x61`
+- Nano/Ploopy vendor id: `0x5043`
+- Elora vendor id: `0x8D1D`
+
+## Fresh macOS setup
 
 From repo root:
 
 ```bash
+brew install uv hidapi
 uv venv .venv
 uv pip install --python .venv/bin/python -r scripts/requirements.txt
-```
 
-Install hidapi if needed:
-
-```bash
-brew install hidapi
-```
-
-If terminal runs fail to load hidapi on macOS, run commands with:
-
-```bash
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib"
-```
-
-## Optional local config
-
-Create a per-machine config (not committed):
-
-```bash
-mkdir -p ~/.config/qmk-nano-hid
-cp scripts/config.example.toml ~/.config/qmk-nano-hid/config.toml
-```
-
-## Manual usage
-
-List matching RAW HID devices:
-
-```bash
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py list
-```
-
-Send commands:
-
-```bash
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py send toggle-scroll
-
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py send cycle-dpi
-
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py send bootloader
-```
-
-Listen for Nano events:
-
-```bash
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py listen --json --wait-for-device
-```
-
-Bridge Nano movement to Elora Raw HID (for auto mouse layer):
-
-```bash
 mkdir -p ~/.config/qmk-nano-hid
 cp scripts/bridge.example.toml ~/.config/qmk-nano-hid/bridge.toml
-
-DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib" \
-  .venv/bin/python scripts/nano_hid.py bridge
 ```
 
-Notes:
+Plug in the Nano and Elora, then verify discovery:
 
-- Bridge forwards Nano `move-start` events to Elora as Raw HID activity packets.
-- Source matching defaults to `vendor_id = 0x5043` (Ploopy).
-- If more than one matching device exists, set `path` in `bridge.toml`.
-- `--quiet-timeout` controls minimum send cadence (default `0.08s`).
+```bash
+export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib"
+.venv/bin/python scripts/nano_hid.py list
+```
 
-## macOS auto-start
+Test manually:
 
-Install/update the LaunchAgent with the venv interpreter:
+```bash
+.venv/bin/python scripts/nano_hid.py bridge --verbose
+```
+
+If moving the Nano wakes the Elora mouse layer, install auto-start:
 
 ```bash
 PYTHON_PATH="$PWD/.venv/bin/python" scripts/macos/install-launchagent.sh
 ```
 
-The agent runs `bridge`, so it stays alive, reconnects when devices are unplugged/replugged, and forwards Nano movement activity to Elora.
+The agent installs to:
 
-The installer writes:
-
-- `~/Library/LaunchAgents/com.max.qmk-nano-hid.plist`
+```text
+~/Library/LaunchAgents/com.max.qmk-nano-hid.plist
+```
 
 Logs:
 
-- `~/Library/Logs/qmk-nano-hid.out.log`
-- `~/Library/Logs/qmk-nano-hid.err.log`
+```text
+~/Library/Logs/qmk-nano-hid.out.log
+~/Library/Logs/qmk-nano-hid.err.log
+```
 
-Status check:
+## Useful commands
+
+Send Nano commands:
+
+```bash
+.venv/bin/python scripts/nano_hid.py send toggle-scroll
+.venv/bin/python scripts/nano_hid.py send cycle-dpi
+.venv/bin/python scripts/nano_hid.py send bootloader
+```
+
+Listen for Nano events:
+
+```bash
+.venv/bin/python scripts/nano_hid.py listen --json --wait-for-device
+```
+
+Check LaunchAgent status:
 
 ```bash
 launchctl print "gui/$(id -u)/com.max.qmk-nano-hid"
 ```
 
-If macOS blocks HID access, grant Input Monitoring permission to the Python binary used by the agent (`.venv/bin/python`).
+Restart LaunchAgent:
+
+```bash
+launchctl bootout "gui/$(id -u)" ~/Library/LaunchAgents/com.max.qmk-nano-hid.plist
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.max.qmk-nano-hid.plist
+```
+
+## Troubleshooting
+
+- `No matching RAW HID device found`: plug in the Nano/Elora, make sure firmware
+  has `RAW_ENABLE = yes`, and run `nano_hid.py list`.
+- Multiple matching devices: copy the correct HID `path` from `list` into
+  `~/.config/qmk-nano-hid/bridge.toml`.
+- Python cannot load HID: ensure `brew install hidapi` is done and
+  `DYLD_FALLBACK_LIBRARY_PATH` is exported as shown above. The LaunchAgent sets
+  this automatically.
+- macOS blocks HID access: grant Input Monitoring permission to
+  `<repo>/.venv/bin/python`.
+- Bridge runs but the Elora layer does not wake: run `bridge --verbose`, confirm
+  events are forwarded, and pin the Elora `path` if multiple QMK devices are
+  connected.
