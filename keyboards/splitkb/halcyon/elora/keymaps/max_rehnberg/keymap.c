@@ -308,8 +308,49 @@ void double_tap(uint16_t keycode) {
     tap_code16(keycode);
 }
 
+static bool process_leader_layer_passthrough(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case QK_MOMENTARY ... QK_MOMENTARY_MAX: {
+            const uint8_t layer = QK_MOMENTARY_GET_LAYER(keycode);
+
+            if (record->event.pressed) {
+                layer_on(layer);
+            } else {
+                layer_off(layer);
+            }
+
+            return false;  // Hide this layer key from Leader.
+        }
+
+        case QK_LAYER_TAP ... QK_LAYER_TAP_MAX: {
+            // Only intercept a held LT(...). Tapped LT keys should continue to
+            // behave as their tap key in Leader sequences.
+            if (record->tap.count == 0) {
+                const uint8_t layer = QK_LAYER_TAP_GET_LAYER(keycode);
+
+                if (record->event.pressed) {
+                    layer_on(layer);
+                } else {
+                    layer_off(layer);
+                }
+
+                return false;  // Hide this layer key from Leader.
+            }
+            break;
+        }
+    }
+
+    return true;
+}
+
 // Combo key handling
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (leader_sequence_active()) {
+        if (!process_leader_layer_passthrough(keycode, record)) {
+            return false;
+        }
+    }
+
     // Handle key press events
     if (record->event.pressed) {
         switch (keycode) {
@@ -599,6 +640,7 @@ bool caps_word_press_user(uint16_t keycode) {
         case KC_BSPC:
         case KC_DEL:
         case KC_UNDS:
+        case SE_UNDS:
         case KC_UP:
         case KC_DOWN:
         case KC_LEFT:
