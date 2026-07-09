@@ -4,8 +4,8 @@
         {
             "label": "QMK: Compile Elora Left",
             "type": "shell",
-            "command": "qmk",
-            "args": ["userspace-compile", "-e", "HLC_NONE=1", "-e", "TARGET=elora_left"],
+            "command": "make",
+            "args": ["elora-left"],
             "group": "build",
             "problemMatcher": "$gcc",
             "presentation": {
@@ -20,8 +20,8 @@
         {
             "label": "QMK: Compile Elora Right",
             "type": "shell",
-            "command": "qmk",
-            "args": ["userspace-compile", "-e", "HLC_ENCODER=1", "-e", "TARGET=elora_right"],
+            "command": "make",
+            "args": ["elora-right"],
             "group": "build",
             "problemMatcher": "$gcc",
             "presentation": {
@@ -35,11 +35,9 @@
         },
         {
             "label": "QMK: Compile Both Halves",
-            "dependsOrder": "parallel",
-            "dependsOn": [
-                "QMK: Compile Elora Left",
-                "QMK: Compile Elora Right"
-            ],
+            "type": "shell",
+            "command": "make",
+            "args": ["elora"],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -49,7 +47,7 @@
             "label": "QMK: Flash Elora Left",
             "type": "shell",
             "command": "qmk",
-            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_NONE=1", "-e", "TARGET=elora_left"],
+            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_ENCODER=1", "-e", "TARGET=elora_left"],
             "group": "build",
             "problemMatcher": "$gcc"
         },
@@ -57,7 +55,7 @@
             "label": "QMK: Flash Elora Right",
             "type": "shell",
             "command": "qmk",
-            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_ENCODER=1", "-e", "TARGET=elora_right"],
+            "args": ["flash", "-kb", "splitkb/halcyon/elora/rev2", "-km", "max_rehnberg", "-e", "HLC_NONE=1", "-e", "TARGET=elora_right"],
             "group": "build",
             "problemMatcher": "$gcc"
         }

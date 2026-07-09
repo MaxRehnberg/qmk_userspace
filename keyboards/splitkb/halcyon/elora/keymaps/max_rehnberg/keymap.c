@@ -5,23 +5,19 @@
 #include QMK_KEYBOARD_H
 #include "keymap_swedish.h"
 #include "gallium_defs.h"
-#include "sendstring_swedish.h"
 #include "rgb_config.h"
 #include "app_switcher.h"
 #include "arcane.h"
 #include "leader.h"
+#include "leader_config.h"
 #include "sentence_case.h"
 #include "transactions.h"
-#include "xcase.h"
 #include "split_util.h"
 #include "ploopy.h"
 #include <string.h>
 
-static bool    is_leader_active            = false;
-static bool    is_leader_changed           = false;
 static uint8_t sentence_case_on_synced     = 0;
 static uint8_t sentence_case_primed_synced = 0;
-static uint8_t leader_active_synced        = 0;
 
 enum layers {
     L_GALLIUM = 0,
@@ -378,87 +374,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-void toggle_xcase(uint16_t keycode) {
-    if (is_xcase_active() ){
-        disable_xcase();
-    } else {
-        enable_xcase_with(keycode);
-    }
-}
-
-void leader_start_user(void){
-    is_leader_active = true;
-    is_leader_changed = true;
-    leader_active_synced = 1;
-}
-
-void leader_end_user(void) {
-    if (leader_sequence_one_key(SE_AT) || leader_sequence_two_keys(KC_A, KC_T)) {
-        SEND_STRING("max.rehnberg@odevo.com");
-    } else if (leader_sequence_one_key(KC_E)) {
-        // é
-        tap_code16(SE_ACUT);
-        tap_code16(KC_E);
-    } else if (leader_sequence_two_keys(KC_T, KC_E)) {
-        // É
-        tap_code16(SE_ACUT);
-        tap_code16(S(KC_E));
-    }else if (leader_sequence_one_key(KC_F)) {
-        // send f"" for Python f-strings and place cursor in between
-        tap_code(KC_F);
-        double_tap(SE_DQUO);
-        tap_code(KC_LEFT);
-    }else if (leader_sequence_two_keys(KC_E, KC_Q)) {
-        // ==
-        double_tap(SE_EQL);
-    } else if (leader_sequence_two_keys(KC_N, KC_E)) {
-        // !=
-        tap_code16(SE_EXLM);
-        tap_code16(SE_EQL);
-    } else if (leader_sequence_two_keys(KC_G, KC_E)) {
-        // >=
-        tap_code16(S(KC_GRV));
-        tap_code16(SE_EQL);
-    } else if (leader_sequence_two_keys(KC_L, KC_E)) {
-        // <=
-        tap_code16(KC_GRV);
-        tap_code16(SE_EQL);
-    } else if (leader_sequence_two_keys(KC_A, KC_R)) {
-        // -> : (arrow)
-        tap_code16(SE_MINS);
-        tap_code16(S(KC_GRV));
-        tap_code16(KC_SPACE);
-        tap_code16(SE_COLN);
-        tap_code16(KC_LEFT);
-    } else if (leader_sequence_two_keys(SE_E, SE_P)){
-        // exit Python PDB
-        SEND_STRING("import os");
-        tap_code16(KC_ENT);
-        SEND_STRING("os._exit(0)");
-        tap_code16(KC_ENT);
-    } else if (leader_sequence_two_keys(SE_C, SE_S)) {
-        // Snake case
-        toggle_xcase(SE_UNDS);
-    } else if (leader_sequence_two_keys(SE_C, SE_C)) {
-        // Camel case
-        toggle_xcase(KC_LSFT);
-    } else if (leader_sequence_two_keys(SE_C, SE_SLSH)) {
-        // Path case
-        toggle_xcase(SE_SLSH);
-    } else if (leader_sequence_two_keys(SE_C, SE_K)) {
-        // Kebab case
-        toggle_xcase(SE_MINS);
-    } else if (leader_sequence_two_keys(SE_C, SE_DOT)) {
-        // Dot case
-        toggle_xcase(SE_DOT);
-    }
-
-
-    is_leader_active = false;
-    is_leader_changed = true;
-    leader_active_synced = 0;
-}
-
 void sentence_case_sync_handler(uint8_t in_size, const void* in_data,
                                 uint8_t out_size, void* out_data) {
     if (in_size == sizeof(sentence_case_on_synced)) {
@@ -473,17 +388,10 @@ void sentence_case_primed_sync_handler(uint8_t in_size, const void* in_data,
     }
 }
 
-void leader_sync_handler(uint8_t in_size, const void* in_data,
-                         uint8_t out_size, void* out_data) {
-    if (in_size == sizeof(leader_active_synced)) {
-        memcpy(&leader_active_synced, in_data, sizeof(leader_active_synced));
-    }
-}
-
 void keyboard_post_init_user(void) {
     transaction_register_rpc(SENTENCE_CASE_SYNC, sentence_case_sync_handler);
     transaction_register_rpc(SENTENCE_CASE_PRIMED_SYNC, sentence_case_primed_sync_handler);
-    transaction_register_rpc(LEADER_SYNC, leader_sync_handler);
+    transaction_register_rpc(LEADER_SYNC, keymap_leader_sync_handler);
     ploopy_init(L_MS);
 }
 
@@ -496,11 +404,10 @@ void housekeeping_task_user(void) {
         static uint8_t last_leader          = 0xFF;
         uint8_t now_sentence                = is_sentence_case_on() ? 1 : 0;
         uint8_t now_sentence_primed         = is_sentence_case_primed() ? 1 : 0;
-        uint8_t now_leader                  = is_leader_active ? 1 : 0;
+        uint8_t now_leader                  = keymap_leader_is_active() ? 1 : 0;
 
         sentence_case_on_synced     = now_sentence;
         sentence_case_primed_synced = now_sentence_primed;
-        leader_active_synced        = now_leader;
 
         if (now_sentence != last_sentence && is_transport_connected()) {
             transaction_rpc_send(SENTENCE_CASE_SYNC, sizeof(now_sentence), &now_sentence);
@@ -554,7 +461,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         set_layer_rgb_by_configs(&caps_word_layer_config);
     }
 
-    if (leader_active_synced) {
+    if (keymap_leader_is_active_synced()) {
         set_layer_rgb_by_configs(&leader_layer_config);
     }
 
@@ -632,11 +539,17 @@ char sentence_case_press_user(uint16_t keycode, keyrecord_t* record, uint8_t mod
             case KC_SCLN:  // SE_ODIA (Ö)
                 return 'a';
 
-            // Sentence-ending punctuation: . ? !
-            case KC_DOT:   // . is punctuation, Shift+. is symbol (>)
-                return !shifted ? '.' : '#';
-            case KC_1:     // Shift+1 = ! (SE_EXLM)
-                return shifted ? '.' : '#';
+            // Digits count as word characters, so numbered bullets like
+            // "1. item" prime Sentence Case after the following space/enter.
+            // Shift+1 is still sentence-ending punctuation (!).
+            case KC_1:
+                return shifted ? '.' : 'a';
+            case KC_2 ... KC_0:
+                return shifted ? '#' : 'a';
+
+            // Sentence-ending punctuation: . : ? !
+            case KC_DOT:   // Swedish: . unshifted, : shifted (SE_COLN)
+                return '.';
             case KC_MINS:  // Shift+- = ? (SE_QUES) on Swedish layout
                 return shifted ? '.' : '#';
 
@@ -653,7 +566,6 @@ char sentence_case_press_user(uint16_t keycode, keyrecord_t* record, uint8_t mod
                 return '\'';
 
             // Symbol keys (backspaceable but not part of a word)
-            case KC_2 ... KC_0:
             case KC_AT ... KC_RPRN:
             case KC_UNDS ... KC_COLN:
             case KC_GRV:

@@ -14,6 +14,7 @@ RAW_ENABLE = yes
 SRC += rgb_config.c
 SRC += app_switcher.c
 SRC += arcane.c
+SRC += leader_config.c
 SRC += ploopy.c
 
 # This adds module functionality to your keyboard (files found in users/halcyon_modules)

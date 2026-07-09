@@ -9,7 +9,7 @@
 #define RGB_TRIGGER_ON_KEYDOWN
 
 // Ploopy auto-mouse timing
-#define PLOOPY_ACTIVITY_TIMEOUT_MS 500
+#define PLOOPY_ACTIVITY_TIMEOUT_MS 300
 #define PLOOPY_LED_BEACON_WINDOW_MS 120
 
 // RGB matrix sleep behavior
@@ -27,7 +27,7 @@
 #define DEBOUNCE 20
 
 // Timing constants
-#define APP_SWITCHER_TIMEOUT 1000 // 1 second
+#define APP_SWITCHER_TIMEOUT 750
 
 #define QUICK_TAP_TERM 0
 
