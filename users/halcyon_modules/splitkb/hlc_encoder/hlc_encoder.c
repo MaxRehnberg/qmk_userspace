@@ -3,6 +3,7 @@
 
 #include "split_util.h"
 #include "atomic_util.h"
+#include "keyboard.h"
 
 #ifdef SPLIT_KEYBOARD
 #    define ROWS_PER_HAND (MATRIX_ROWS / 2)
@@ -41,7 +42,7 @@ void matrix_init_kb(void) {
     gpio_set_pin_input_high(HLC_ENCODER_BUTTON);
 
     // Also need to define here otherwise right half is swapped
-    if (!isLeftHand) {
+    if (!is_keyboard_left()) {
         #    ifdef MATRIX_ROW_PINS_RIGHT
                 const pin_t row_pins_right[ROWS_PER_HAND] = MATRIX_ROW_PINS_RIGHT;
                 for (uint8_t i = 0; i < ROWS_PER_HAND; i++) {

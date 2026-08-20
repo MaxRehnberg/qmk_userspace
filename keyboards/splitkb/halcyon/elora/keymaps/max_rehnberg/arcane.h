@@ -5,7 +5,7 @@
 #include "action.h"
 
 // Function declarations for arcane key processing
-void process_left_arcane(uint16_t keycode, uint8_t mods);
-void process_right_arcane(uint16_t keycode, uint8_t mods);
+void process_left_arcane(keyrecord_t* record);
+void process_right_arcane(keyrecord_t* record);
 
 #endif // ARCANE_H

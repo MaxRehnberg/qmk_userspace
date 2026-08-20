@@ -12,7 +12,12 @@ ifeq ($(QMK_FIRMWARE_ROOT),)
     $(error Cannot determine qmk_firmware location. `qmk config -ro user.qmk_home` is not set)
 endif
 
-.PHONY: elora elora-left elora-right ploopy
+.PHONY: elora elora-left elora-right ploopy update-qmk
+
+update-qmk:
+	git -C "$(QMK_FIRMWARE_ROOT)" pull --ff-only
+	git -C "$(QMK_FIRMWARE_ROOT)" submodule sync --recursive
+	git -C "$(QMK_FIRMWARE_ROOT)" submodule update --init --recursive
 
 elora: elora-left elora-right
 

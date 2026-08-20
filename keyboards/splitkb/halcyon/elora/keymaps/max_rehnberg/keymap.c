@@ -354,6 +354,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Handle key press events
     if (record->event.pressed) {
         switch (keycode) {
+            // While the app switcher is active, tapping H selects the current app.
+            case GH_RHM4:
+                if (app_switcher_active && record->tap.count) {
+                    end_app_switcher_with_selection();
+                    return false;
+                }
+                break;
+
             // While the app switcher is active, tap A as Q because Q shares the
             // encoder hand and is awkward to reach while rotating/selecting apps.
             case GH_RHM3:
@@ -362,14 +370,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     return false;
                 }
                 break;
-
-            // Arcane keys
-            case LARCANE:
-                process_left_arcane(get_last_keycode(), get_last_mods());
-                return false;
-            case RARCANE:
-                process_right_arcane(get_last_keycode(), get_last_mods());
-                return false;
 
             // App switcher controls
             case APP_CW:
@@ -390,6 +390,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        // Arcane keys need both press and release events for held repeats.
+        case LARCANE:
+            process_left_arcane(record);
+            return false;
+        case RARCANE:
+            process_right_arcane(record);
+            return false;
         case MEH_LD:
         case KC_SCROLL_LOCK:
             if (record->tap.count && record->event.pressed) {
@@ -480,7 +487,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
 
 // Timeout handling
 void matrix_scan_user(void) {
-    if (app_switcher_active && timer_elapsed(app_switcher_timer) > APP_SWITCHER_TIMEOUT) {
+    if (app_switcher_timed_out()) {
         end_app_switcher_with_selection();
     }
 }
@@ -568,6 +575,13 @@ char sentence_case_press_user(uint16_t keycode, keyrecord_t* record, uint8_t mod
             return '\'';
         }
 
+        // Hack: clear the primed state before classifying an unshifted digit as
+        // a word character. This keeps numbered lists working without letting
+        // Sentence Case turn a leading 1 or 2 into ! or ".
+        if (!shifted && keycode >= KC_1 && keycode <= KC_0 && is_sentence_case_primed()) {
+            sentence_case_clear();
+        }
+
         switch (keycode) {
             case LARCANE:
             case RARCANE:
@@ -653,12 +667,24 @@ bool caps_word_press_user(uint16_t keycode) {
 }
 
 
+// Keep Flow Tap's normal eligibility rules, but shorten the window for Space/NUM.
+uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t* record, uint16_t prev_keycode) {
+    if (!is_flow_tap_key(keycode) || !is_flow_tap_key(prev_keycode)) {
+        return 0;
+    }
+
+    return keycode == SPC_NUM ? SPC_NUM_FLOW_TAP_TERM : FLOW_TAP_TERM;
+}
+
+
 
 // Chorded hold behavior, overrides default to allow some one-handed chords.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
                       uint16_t other_keycode, keyrecord_t* other_record) {
-    // Exceptionally allow some one-handed chords for hotkeys.
+    // Exceptionally allow selected one-handed chords.
     switch (tap_hold_keycode) {
+        case ENT_SYM:
+            return true;
         case SPC_NUM:
             if (other_keycode == KC_D || other_keycode == GH_LHM3 ||
                 other_keycode == GH_LHM2 || other_keycode == GH_LHM4 ||

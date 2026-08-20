@@ -83,12 +83,9 @@ void leader_end_user(void) {
         tap_code16(KC_GRV);
         tap_code16(SE_EQL);
     } else if (leader_sequence_two_keys(KC_A, KC_R)) {
-        // -> : (arrow)
+        // -> (arrow)
         tap_code16(SE_MINS);
         tap_code16(S(KC_GRV));
-        tap_code16(KC_SPACE);
-        tap_code16(SE_COLN);
-        tap_code16(KC_LEFT);
     } else if (leader_sequence_two_keys(SE_E, SE_P)) {
         // exit Python PDB
         SEND_STRING("import os");
