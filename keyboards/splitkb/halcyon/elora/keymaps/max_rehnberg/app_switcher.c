@@ -1,15 +1,21 @@
 // App switcher functionality for macOS
 #include QMK_KEYBOARD_H
 #include "timer.h"
-#include "wait.h"
 #include "app_switcher.h"
 
-bool            app_switcher_active  = false;
-static uint16_t app_switcher_timer   = 0;
-static uint16_t app_switcher_activation_timer = 0;
-static uint16_t app_switcher_timeout = APP_SWITCHER_INITIAL_TIMEOUT;
+bool            app_switcher_active              = false;
+static bool     app_switcher_alt_release_pending = false;
+static uint16_t app_switcher_timer               = 0;
+static uint16_t app_switcher_activation_timer    = 0;
+static uint16_t app_switcher_timeout             = APP_SWITCHER_INITIAL_TIMEOUT;
+static uint16_t app_switcher_alt_timer           = 0;
 // Function to start the app switcher
 void start_app_switcher(void) {
+    if (app_switcher_alt_release_pending) {
+        unregister_code(KC_LALT);
+        app_switcher_alt_release_pending = false;
+    }
+
     uint16_t now = timer_read();
 
     register_code(KC_LGUI);
@@ -26,9 +32,16 @@ void end_app_switcher_with_selection(void) {
     }
     register_code(KC_LALT);
     unregister_code(KC_LGUI);
-    wait_ms(50); // Brief hold
-    unregister_code(KC_LALT);
-    app_switcher_active = false;
+    app_switcher_active              = false;
+    app_switcher_alt_release_pending = true;
+    app_switcher_alt_timer           = timer_read();
+}
+
+void app_switcher_task(void) {
+    if (app_switcher_alt_release_pending && timer_elapsed(app_switcher_alt_timer) >= APP_SWITCHER_SELECTION_HOLD) {
+        unregister_code(KC_LALT);
+        app_switcher_alt_release_pending = false;
+    }
 }
 
 // Function to navigate within app switcher and reset timer

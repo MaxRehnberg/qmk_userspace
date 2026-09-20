@@ -12,5 +12,6 @@ void navigate_app_switcher(uint16_t direction_key);
 void app_switch(uint16_t direction_key);
 void end_app_switcher_with_selection(void);
 bool app_switcher_timed_out(void);
+void app_switcher_task(void);
 
 #endif // APP_SWITCHER_H

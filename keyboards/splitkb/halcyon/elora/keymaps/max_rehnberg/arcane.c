@@ -30,6 +30,11 @@ static void magic_send_string_P(const char *str, uint16_t repeat_keycode) {
     }
 }
 
+static void magic_tap_code16(uint16_t keycode, uint16_t repeat_keycode) {
+    tap_code16(keycode);
+    set_last_keycode(repeat_keycode);
+}
+
 static bool handle_arcane_release(keyrecord_t* record) {
     if (record->event.pressed) {
         return false;
@@ -83,11 +88,18 @@ void process_right_arcane(keyrecord_t* record) { // RARCANE definitions
             MAGIC_STRING("u", SE_U);
         } break;
         case GH_RHM1: {
-            MAGIC_STRING("i", GH_RHM1);
+            MAGIC_STRING("o", SE_O);
         } break;
 
         case SE_F: {
             MAGIC_STRING("y", SE_Y);
+        } break;
+
+        case KC_DOT: {
+            magic_tap_code16(SE_SLSH, SE_SLSH);
+        } break;
+        case SE_SLSH: {
+            magic_tap_code16(KC_DOT, KC_DOT);
         } break;
 
         // Opposite-side and otherwise unhandled keys repeat natively.
@@ -110,7 +122,7 @@ void process_left_arcane(keyrecord_t* record) { // LARCANE definitions
     switch (keycode) {
         // left side: magic
         case SE_B: {
-            MAGIC_STRING("j", SE_J);
+            MAGIC_STRING("m", SE_M);
         } break;
         case SE_L: {
             MAGIC_STRING("r", GH_LHM2);
@@ -126,7 +138,7 @@ void process_left_arcane(keyrecord_t* record) { // LARCANE definitions
         } break;
 
         case GH_LHM1: {
-            MAGIC_STRING("n", GH_LHM1);
+            MAGIC_STRING("b", SE_B);
         } break;
         case GH_LHM2: {
             MAGIC_STRING("l", SE_L);
@@ -151,7 +163,7 @@ void process_left_arcane(keyrecord_t* record) { // LARCANE definitions
             MAGIC_STRING("b", SE_B);
         } break;
         case SE_P: {
-            MAGIC_STRING("p", SE_P);
+            MAGIC_STRING("d", SE_D);
         } break;
         case SE_Z: {
             MAGIC_STRING("z", SE_Z);
