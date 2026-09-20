@@ -1,29 +1,64 @@
 # Ploopy Nano host integration
 
-Makes the standalone Ploopy Nano wake the Elora mouse layer on macOS.
+Makes the standalone Ploopy Nano temporarily activate the Mouse layer on the
+Elora, Kyria, or both.
 
-The Nano is a separate trackball, so the Elora does not automatically know when
-it moves. `nano_hid.py bridge` listens for Nano movement over QMK Raw HID and
-forwards a small activity packet to the Elora. The Elora then enables its mouse
-layer briefly.
+The Nano is a separate USB trackball, so the keyboard cannot observe its
+movement directly. On macOS, `nano_hid.py bridge` reads the Nano's QMK Raw HID
+`move-start` events and forwards the same versioned 32-byte `PN` packet to each
+explicitly selected keyboard Raw HID endpoint.
 
-## How it works
+Windows and Linux can continue using the Nano firmware's existing Scroll Lock
+beacon without the bridge. The host forwards those lock-state changes as
+ordinary HID indicator reports, and both keyboard firmwares recognize the same
+two-transition beacon.
 
-- Nano emits Raw HID `move-start` events.
-- The bridge script listens to the Nano.
-- The bridge forwards activity packets to the Elora.
-- A macOS LaunchAgent keeps the bridge running in the background.
+## macOS data flow
 
-Devices are discovered through QMK Raw HID:
+```text
+Ploopy Nano Raw HID
+    -> nano_hid.py bridge
+    -> configured Raw HID targets
+       -> Elora
+       -> Kyria dongle
+```
+
+All Raw HID endpoints use:
 
 - usage page: `0xFF60`
 - usage: `0x61`
+- packet: 32 bytes with `PN` magic, protocol version `1`, and `MOVE_START` event
+
+Device identities differ:
+
 - Nano/Ploopy vendor id: `0x5043`
 - Elora vendor id: `0x8D1D`
+- Kyria dongle vendor/product id: `0x1D50` / `0x615E`
+
+## Target selection
+
+Routing is explicit in `bridge.toml`:
+
+```toml
+[bridge]
+targets = ["kyria"]
+```
+
+Use `targets = ["elora"]` for Elora, or
+`targets = ["elora", "kyria"]` to forward to both. Merely connecting a keyboard
+does not select it. Each configured target reconnects independently, so one
+missing keyboard does not prevent delivery to another.
+
+If multiple devices match one target, set that target's exact HID `path` rather
+than allowing an arbitrary choice.
+
+An older configuration containing only `[elora]` remains Elora-only when
+`bridge.targets` is absent. New configurations default to Kyria, but specifying
+the targets is recommended.
 
 ## Fresh macOS setup
 
-From repo root:
+From the QMK userspace root:
 
 ```bash
 brew install uv hidapi
@@ -34,20 +69,22 @@ mkdir -p ~/.config/qmk-nano-hid
 cp scripts/bridge.example.toml ~/.config/qmk-nano-hid/bridge.toml
 ```
 
-Plug in the Nano and Elora, then verify discovery:
+Plug in the Nano and intended keyboard, then verify Nano discovery:
 
 ```bash
 export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/hidapi/lib:/usr/local/opt/hidapi/lib"
 .venv/bin/python scripts/nano_hid.py list
 ```
 
-Test manually:
+Test the configured route manually:
 
 ```bash
 .venv/bin/python scripts/nano_hid.py bridge --verbose
 ```
 
-If moving the Nano wakes the Elora mouse layer, install auto-start:
+The bridge logs each connected target and every successful destination in
+verbose mode. If moving the Nano activates the intended Mouse layer, install
+auto-start:
 
 ```bash
 PYTHON_PATH="$PWD/.venv/bin/python" scripts/macos/install-launchagent.sh
@@ -82,30 +119,26 @@ Listen for Nano events:
 .venv/bin/python scripts/nano_hid.py listen --json --wait-for-device
 ```
 
-Check LaunchAgent status:
+Check or restart the LaunchAgent:
 
 ```bash
 launchctl print "gui/$(id -u)/com.max.qmk-nano-hid"
-```
-
-Restart LaunchAgent:
-
-```bash
 launchctl bootout "gui/$(id -u)" ~/Library/LaunchAgents/com.max.qmk-nano-hid.plist
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.max.qmk-nano-hid.plist
 ```
 
 ## Troubleshooting
 
-- `No matching RAW HID device found`: plug in the Nano/Elora, make sure firmware
-  has `RAW_ENABLE = yes`, and run `nano_hid.py list`.
-- Multiple matching devices: copy the correct HID `path` from `list` into
+- `No matching RAW HID device found`: confirm the relevant device firmware
+  exposes Raw HID and inspect paths with `nano_hid.py list`.
+- Multiple matching devices: copy the intended HID `path` into its section in
   `~/.config/qmk-nano-hid/bridge.toml`.
 - Python cannot load HID: ensure `brew install hidapi` is done and
   `DYLD_FALLBACK_LIBRARY_PATH` is exported as shown above. The LaunchAgent sets
   this automatically.
 - macOS blocks HID access: grant Input Monitoring permission to
   `<repo>/.venv/bin/python`.
-- Bridge runs but the Elora layer does not wake: run `bridge --verbose`, confirm
-  events are forwarded, and pin the Elora `path` if multiple QMK devices are
-  connected.
+- A target remains unavailable: run `bridge --verbose`, verify its VID/PID and
+  Raw HID usage, and reflash that keyboard if its endpoint is missing.
+- Events are forwarded but Mouse does not activate: verify the target name in
+  `bridge.targets` and check that it appears in the verbose `targets=` output.

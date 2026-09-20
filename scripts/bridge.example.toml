@@ -1,3 +1,7 @@
+[bridge]
+# Route macOS movement events explicitly. Use ["elora", "kyria"] to wake both.
+targets = ["kyria"]
+
 [ploopy]
 # Optional filters for source Nano events.
 vendor_id = 0x5043
@@ -7,10 +11,17 @@ usage = 0x61
 # path = "DevSrvsID:4312719419"
 
 [elora]
-# Optional filters for sink Elora RAW HID endpoint.
-# Set product_id/path if multiple 0x8D1D devices are connected.
+# Optional filters for the Elora Raw HID sink.
 vendor_id = 0x8D1D
 usage_page = 0xFF60
 usage = 0x61
 # product_id = 0xA392
+# path = "IOService:/..."
+
+[kyria]
+# Optional filters for the Kyria dongle Raw HID sink.
+vendor_id = 0x1D50
+product_id = 0x615E
+usage_page = 0xFF60
+usage = 0x61
 # path = "IOService:/..."

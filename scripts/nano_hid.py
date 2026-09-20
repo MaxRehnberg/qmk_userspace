@@ -55,12 +55,21 @@ BRIDGE_DEFAULT_PLOOPY_FILTER = {
     "path": None,
 }
 
-BRIDGE_DEFAULT_ELORA_FILTER = {
-    "usage_page": DEFAULT_USAGE_PAGE,
-    "usage": DEFAULT_USAGE,
-    "vendor_id": 0x8D1D,
-    "product_id": None,
-    "path": None,
+BRIDGE_DEFAULT_SINK_FILTERS = {
+    "elora": {
+        "usage_page": DEFAULT_USAGE_PAGE,
+        "usage": DEFAULT_USAGE,
+        "vendor_id": 0x8D1D,
+        "product_id": None,
+        "path": None,
+    },
+    "kyria": {
+        "usage_page": DEFAULT_USAGE_PAGE,
+        "usage": DEFAULT_USAGE,
+        "vendor_id": 0x1D50,
+        "product_id": 0x615E,
+        "path": None,
+    },
 }
 
 
@@ -128,17 +137,6 @@ def decode_device_identity(device: dict[str, Any]) -> str:
     )
 
 
-def best_device_match(
-    devices: list[dict[str, Any]], device_filter: dict[str, Any]
-) -> dict[str, Any] | None:
-    matches = [dev for dev in devices if matches_device(dev, device_filter)]
-    if not matches:
-        return None
-
-    chosen = sorted(matches, key=lambda dev: decode_path(dev.get("path")))[0]
-    return chosen
-
-
 def sleep_remaining(deadline: float | None, retry_seconds: float) -> None:
     if deadline is None:
         time.sleep(retry_seconds)
@@ -194,8 +192,30 @@ def read_next_parsed_event(
     return parsed
 
 
-def make_elora_move_packet(sequence: int = 0) -> bytes:
-    return build_packet(NANO_TYPE_EVENT, 0x81, 0, sequence)
+def get_bridge_targets(bridge_config: dict[str, Any]) -> list[str]:
+    bridge_options = bridge_config.get("bridge", {})
+    configured = (
+        bridge_options.get("targets") if isinstance(bridge_options, dict) else None
+    )
+
+    if configured is None:
+        # Preserve existing Elora-only configurations while defaulting new setups to Kyria.
+        configured = (
+            ["elora"]
+            if "elora" in bridge_config and "kyria" not in bridge_config
+            else ["kyria"]
+        )
+    if not isinstance(configured, list) or not configured:
+        raise RuntimeError("bridge.targets must be a non-empty list")
+
+    targets: list[str] = []
+    for value in configured:
+        name = str(value)
+        if name not in BRIDGE_DEFAULT_SINK_FILTERS:
+            raise RuntimeError(f"Unsupported bridge target: {name}")
+        if name not in targets:
+            targets.append(name)
+    return targets
 
 
 def cmd_bridge(args: argparse.Namespace) -> int:
@@ -207,10 +227,13 @@ def cmd_bridge(args: argparse.Namespace) -> int:
         BRIDGE_DEFAULT_PLOOPY_FILTER,
         bridge_config.get("ploopy") if isinstance(bridge_config, dict) else None,
     )
-    sink_filter = merge_device_filter(
-        BRIDGE_DEFAULT_ELORA_FILTER,
-        bridge_config.get("elora") if isinstance(bridge_config, dict) else None,
-    )
+    target_names = get_bridge_targets(bridge_config)
+    sink_filters = {
+        name: merge_device_filter(
+            BRIDGE_DEFAULT_SINK_FILTERS[name], bridge_config.get(name)
+        )
+        for name in target_names
+    }
 
     retry_seconds = max(args.retry_seconds, 0.2)
     read_timeout_ms = max(args.timeout_ms, 20)
@@ -228,14 +251,14 @@ def cmd_bridge(args: argparse.Namespace) -> int:
     print(
         "Bridge started: "
         f"source usage=0x{source_filter['usage']:02X} vid={source_filter['vendor_id']} -> "
-        f"sink usage=0x{sink_filter['usage']:02X} vid={sink_filter['vendor_id']}",
+        f"targets={','.join(target_names)}",
         file=sys.stderr,
     )
 
     src_info: dict[str, Any] | None = None
     src_dev: Any | None = None
-    dst_info: dict[str, Any] | None = None
-    dst_dev: Any | None = None
+    sink_devs: dict[str, Any | None] = {name: None for name in target_names}
+    sink_retry_at: dict[str, float] = {name: 0.0 for name in target_names}
 
     last_forwarded_at = 0.0
     events_seen = 0
@@ -246,8 +269,26 @@ def cmd_bridge(args: argparse.Namespace) -> int:
             return
         try:
             dev.close()
-        except OSError:
+        except hid_error_types():
             pass
+
+    def connect_available_sinks(now: float) -> None:
+        for name in target_names:
+            if sink_devs[name] is not None or now < sink_retry_at[name]:
+                continue
+            try:
+                info = select_single_device(sink_filters[name])
+                sink_devs[name] = open_device(info)
+                print(
+                    f"{name} connected: {decode_device_identity(info)}",
+                    file=sys.stderr,
+                )
+            except bridge_errors as exc:
+                sink_retry_at[name] = now + retry_seconds
+                print(
+                    f"{name}: {exc}; retrying in {retry_seconds:.1f}s",
+                    file=sys.stderr,
+                )
 
     while True:
         if deadline is not None and time.monotonic() >= deadline:
@@ -263,14 +304,7 @@ def cmd_bridge(args: argparse.Namespace) -> int:
                     file=sys.stderr,
                 )
 
-            if dst_dev is None:
-                dst_info, dst_dev = open_with_retry(
-                    sink_filter, retry_seconds, deadline, "sink"
-                )
-                print(
-                    f"sink connected: {decode_device_identity(dst_info)}",
-                    file=sys.stderr,
-                )
+            connect_available_sinks(time.monotonic())
 
             parsed = read_next_parsed_event(src_dev, read_timeout_ms, args.verbose)
             if parsed is None:
@@ -288,33 +322,44 @@ def cmd_bridge(args: argparse.Namespace) -> int:
             if not should_forward:
                 continue
 
-            packet = make_elora_move_packet(parsed["seq"])
-            try:
-                write_packet(dst_dev, packet)
+            packet = build_packet(NANO_TYPE_EVENT, 0x81, 0, parsed["seq"])
+            delivered_to: list[str] = []
+            for name in target_names:
+                dev = sink_devs[name]
+                if dev is None:
+                    continue
+                try:
+                    write_packet(dev, packet)
+                    delivered_to.append(name)
+                except bridge_errors as exc:
+                    print(
+                        f"{name} write failed: {exc}; reconnecting",
+                        file=sys.stderr,
+                    )
+                    close_dev(dev)
+                    sink_devs[name] = None
+                    sink_retry_at[name] = now + retry_seconds
+
+            if delivered_to:
                 last_forwarded_at = now
                 events_forwarded += 1
-
                 if args.verbose:
                     print(
                         "forwarded move-start "
-                        f"src_seq={parsed['seq']} count={events_forwarded}",
+                        f"src_seq={parsed['seq']} targets={','.join(delivered_to)} "
+                        f"count={events_forwarded}",
                         file=sys.stderr,
                     )
-            except bridge_errors as exc:
-                print(f"sink write failed: {exc}; reconnecting sink", file=sys.stderr)
-                close_dev(dst_dev)
-                dst_dev = None
 
         except bridge_errors as exc:
             print(f"bridge I/O error: {exc}; reconnecting", file=sys.stderr)
             close_dev(src_dev)
-            close_dev(dst_dev)
             src_dev = None
-            dst_dev = None
             sleep_remaining(deadline, retry_seconds)
 
     close_dev(src_dev)
-    close_dev(dst_dev)
+    for dev in sink_devs.values():
+        close_dev(dev)
 
     print(
         f"bridge stopped: seen={events_seen} forwarded={events_forwarded}",
@@ -457,9 +502,9 @@ def select_single_device(device_filter: dict[str, Any]) -> dict[str, Any]:
     devices = list_devices(device_filter)
     if not devices:
         raise RuntimeError("No matching RAW HID device found")
-    if len(devices) > 1 and device_filter["path"] is None:
+    if len(devices) > 1:
         message_lines = [
-            "Multiple matching RAW HID devices found; rerun with --path:",
+            "Multiple matching RAW HID devices found; refine the configured path or identifiers:",
         ]
         for dev in devices:
             message_lines.append(f"  - {decode_path(dev.get('path'))}")
@@ -714,7 +759,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     bridge_parser = subparsers.add_parser(
-        "bridge", help="forward Nano move events to Elora RAW HID"
+        "bridge", help="forward Nano move events to configured keyboard targets"
     )
     bridge_parser.add_argument(
         "--seconds", type=float, help="bridge duration in seconds"
